@@ -13,3 +13,6 @@ ITP-00251,DE-TSO-0016,other_pipe,Greifswald OPAL,C,"Nord Stream, OPAL leg. Not i
 ITP-00454,DE-TSO-0020,other_pipe,Greifswald OPAL,C,"Nord Stream, OPAL leg. Not in the interconnection snapshot. OPAL Gastransport and Lubmin-Brandov Gastransport report it: equal within 1% on 0.967 of days. One series per leg, the largest (author decision 13 Oct 2026)"
 ITP-00104,PL-TSO-0001,other_pipe,,C,"Kondratki (BY>PL), Yamal. Not in the interconnection snapshot (point no longer valid). Label from the ENTSOG flow rows"
 ITP-00092,PL-TSO-0002,other_pipe,,C,Wysokoje (BY>PL). Not in the interconnection snapshot (point no longer valid). Label from the ENTSOG flow rows
+LNG-00003,FR-TSO-0003,lng,,C,Dunkerque LNG / PEG North. LNG send-out into the French grid. Not in the interconnection snapshot. Label from the ENTSOG flow rows
+LNG-00066,DE-TSO-0009,lng,,C,"Wilhelmshaven, LNG-Terminal 1. Not in the interconnection snapshot. No day overlaps with Wilhelmshaven LNG-Zone (LNG-00083), which follows it"
+LNG-00042,GR-TSO-0001,lng,,C,"AMFITRITI. ENTSOG point type 'LNG Entry point'. The snapshot lists it as transmission to transmission, so it was classed as an intra-EU point"
