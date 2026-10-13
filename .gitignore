@@ -1,0 +1,65 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+build/
+dist/
+
+# Secrets
+.env
+
+# Data — the store and raw payloads are archived
+data/pit/*
+data/raw/*
+data/imagery/*
+data/logs/*
+!data/**/.gitkeep
+!data/logs/README.md
+
+# Notebooks: percent-format .py is source
+notebooks/*.ipynb
+.ipynb_checkpoints/
+
+# Rendered output
+paper/_output/
+paper/.quarto/
+
+# Node
+node_modules/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+
+# Private working files, kept locally
+docs/*
+!docs/assets/
+docs/assets/*
+!docs/assets/fig-cost-parity.png
+!docs/assets/fig-monte-carlo.png
+paper/
+site/
+scripts/
+notebooks/
+Makefile
+.editorconfig
+.pre-commit-config.yaml
+.github/ISSUE_TEMPLATE/
+.github/pull_request_template.md
+.github/workflows/pages.yml
+archivers/README.md
+archivers/crontab.example
+config/episodes_candidates_*.csv
+tests/test_site_parity.py
+data/

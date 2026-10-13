@@ -1,0 +1,69 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "nsqueeze"
+version = "0.1.0.dev0"
+description = "N-Squeeze — a multi-sensor monitor of Europe's gas-to-nitrogen chain."
+readme = "README.md"
+license = "MIT"
+authors = [{ name = "Andriy Kovalchuk" }]
+requires-python = ">=3.11"
+keywords = ["ammonia", "nitrogen", "natural-gas", "TTF", "CBAM", "remote-sensing", "commodities"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Intended Audience :: Science/Research",
+  "Topic :: Scientific/Engineering :: Information Analysis",
+]
+dependencies = [
+  "numpy>=1.26",
+  "pandas>=2.2",
+  "pyarrow>=16",
+  "duckdb>=1.1",
+  "pyyaml>=6.0",
+  "pydantic>=2.7",
+  "httpx>=0.27",
+  "scipy>=1.13",
+  "statsmodels>=0.14",
+  "matplotlib>=3.9",
+  "openpyxl>=3.1",
+  "xlrd>=2.0",
+]
+
+[project.optional-dependencies]
+# Phase 3–4: imagery.
+geo = ["pystac-client>=0.8", "rioxarray>=0.17", "xarray>=2024.6", "geopandas>=1.0", "shapely>=2.0"]
+eaui = ["hmmlearn>=0.3"]
+ais = ["websockets>=13"]
+# Document rendering: Quarto (bundles Typst, so PDFs need no LaTeX) + Jupyter execution
+paper = ["quarto-cli>=1.6", "jupyter", "ipykernel", "nbformat", "nbclient", "tabulate>=0.9"]
+dev = ["tabulate>=0.9", "pytest>=8", "pytest-cov>=5", "ruff>=0.6", "mypy>=1.11", "types-PyYAML", "pandas-stubs", "jupytext>=1.16", "pre-commit>=3.8"]
+
+[project.scripts]
+nsq = "nsqueeze.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["nsqueeze"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+markers = [
+  "network: hits a live API (deselect with -m 'not network')",
+  "needs_data: requires archived data not in the repo",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "NPY", "PD", "RUF", "SIM"]
+ignore = ["RUF001", "RUF002", "RUF003", "SIM300"]  # allow Unicode (×, ≈, –); SIM300 misfires on pytest.approx
+
+[tool.mypy]
+python_version = "3.11"
+strict = false
+warn_unused_ignores = true
+ignore_missing_imports = true
