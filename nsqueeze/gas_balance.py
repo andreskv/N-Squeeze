@@ -236,21 +236,26 @@ def eurostat_net_by_bucket(trade: pd.DataFrame) -> pd.DataFrame:
     """Monthly net imports into the EU-27 by bucket, TWh, from ``eurostat_gas_trade`` rows.
 
     Pipeline gas = natural gas (G3000) − LNG (G3200), per partner. Net = imports −
-    exports. Partners inside the EU-27, ``TOTAL`` and ``NSP`` (not specified) drop
-    out; regional "other" partners are outside the EU-27 and count as other pipeline.
+    exports. Partners inside the EU-27 and ``TOTAL`` drop out; regional "other"
+    partners are outside the EU-27 and count as other pipeline. ``NSP`` (not
+    specified) counts as LNG for G3200, since the product already says LNG; pipeline
+    NSP cannot be split between Norway and other pipeline and drops out.
 
     Eurostat does not publish the EU-27 aggregate for some months (most of 2019 and
-    all of 2020). A month counts only if both the import total and Norway are
-    published. Other months are left out, not read as zero.
+    all of 2020), and in March 2024 it publishes the total without a partner split.
+    A month counts only if the import total and Norway are published and the named
+    partners (NSP included) sum to at least 99% of the total. Other months are left
+    out, not read as zero.
     """
     parts = trade.series_id.str.split(".", expand=True)
     t = trade.assign(flow=parts[2], siec=parts[3], partner=parts[4])
     imp = t[(t.flow == "IMP") & (t.siec == "G3000")]
-    published = set(imp[imp.partner == "TOTAL"].observed_at) & set(
-        imp[imp.partner == "NO"].observed_at
-    )
+    total = imp[imp.partner == "TOTAL"].set_index("observed_at").value
+    named = imp[imp.partner != "TOTAL"].groupby("observed_at").value.sum()
+    complete = named.reindex(total.index) >= 0.99 * total
+    published = set(total.index[complete]) & set(imp[imp.partner == "NO"].observed_at)
     t = t[t.observed_at.isin(published)]
-    t = t[~t.partner.isin(EU27_EUROSTAT | {"TOTAL", "NSP"})]
+    t = t[~t.partner.isin(EU27_EUROSTAT | {"TOTAL"})]
     t["signed"] = t.value.where(t.flow == "IMP", -t.value)
     w = t.pivot_table(
         index="observed_at", columns=["siec", "partner"], values="signed", aggfunc="sum"
@@ -262,7 +267,7 @@ def eurostat_net_by_bucket(trade: pd.DataFrame) -> pd.DataFrame:
         {
             "norway": pipe.get("NO", 0.0),
             "lng": lng,
-            "other_pipe": pipe.drop(columns="NO", errors="ignore").sum(axis=1),
+            "other_pipe": pipe.drop(columns=["NO", "NSP"], errors="ignore").sum(axis=1),
         }
     )
     return units.tj_to_twh(out)

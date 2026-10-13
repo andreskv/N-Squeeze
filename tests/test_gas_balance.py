@@ -217,6 +217,27 @@ def test_eurostat_buckets_and_check():
     assert summary.loc["lng", "months"] == 1  # February has no Eurostat row
 
 
+def test_eurostat_nsp_and_incomplete_month():
+    def rows(month, pairs):
+        ids, vals = zip(*pairs, strict=True)
+        return pd.DataFrame(
+            {"series_id": [f"ESTAT.GAS.IMP.{i}" for i in ids], "observed_at": pd.Timestamp(month),
+             "value": vals}
+        )  # fmt: skip
+
+    full = rows(
+        "2024-02-01",
+        [("G3000.TOTAL", 7200.0), ("G3000.NO", 3600.0), ("G3000.NSP", 3600.0),
+         ("G3200.NSP", 1800.0)],
+    )  # fmt: skip
+    # March 2024 pattern: total published, partners cover less than 99% of it
+    partial = rows("2024-03-01", [("G3000.TOTAL", 7200.0), ("G3000.NO", 3600.0)])
+    e = gb.eurostat_net_by_bucket(pd.concat([full, partial]))
+    assert list(e.index) == [pd.Timestamp("2024-02-01")]
+    # NSP LNG counts as LNG; NSP pipeline (3600 - 1800 TJ) is in no bucket
+    assert (e.iloc[0].norway, e.iloc[0].lng, e.iloc[0].other_pipe) == pytest.approx((1.0, 0.5, 0.0))
+
+
 def test_archive_points_rename_and_bucket():
     table = pd.DataFrame(
         {
