@@ -1,0 +1,14 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Pre-registration freeze
+#
+# While frozen: false, code may fit parameters on 2015–2025 data but MUST NOT read 2026 hold-out episodes or score 2026 results
+#
+# Because 2026 events are already public, this is a pseudo-holdout
+# The genuine holdout is winter 2026/27 (timestamped weekly logs in data/logs/).
+# ─────────────────────────────────────────────────────────────────────────────
+
+frozen: false
+preregistration_commit: null   # e.g. "a1b2c3d" — the commit that froze PREREGISTRATION.md
+frozen_at: null                # ISO date
+calibration_window: ["2015-01-01", "2025-12-31"]
+holdout_window: ["2026-01-01", null]

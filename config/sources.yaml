@@ -1,0 +1,207 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Data-source registry.
+#   verified: false  → endpoint/terms not yet checked by hand.
+#   recoverable: false → history cannot be rebuilt later.
+# ─────────────────────────────────────────────────────────────────────────────
+
+agsi:
+  name: GIE AGSI+ gas storage
+  layer: L1
+  portal: https://agsi.gie.eu
+  frequency: daily
+  auth: { env: AGSI_API_KEY, header: x-key }
+  recoverable: false   # vintages are revised
+  verified: true   # fetched with key 2026-10-13
+  phase: 0
+
+alsi:
+  name: GIE ALSI+ LNG terminals
+  layer: L1
+  portal: https://alsi.gie.eu
+  frequency: daily
+  auth: { env: AGSI_API_KEY, header: x-key }
+  fields: "inventory{lng,gwh}, sendOut, dtmi{lng,gwh}, dtrs (GIE API manual v013, March 2025)"
+  rate_limit: 60 calls/min; data published once a day at 19:30
+  recoverable: false
+  verified: true   # fields confirmed live with key 2026-10-13
+  phase: 0
+
+entsog:
+  name: ENTSOG Transparency Platform
+  layer: L1
+  portal: https://transparency.entsog.eu
+  frequency: daily
+  auth: none
+  scope: all points archived (≈1,000/day, kWh/d); supply buckets in gas_balance.classify_points
+  metadata: config/entsog_interconnections.csv (API snapshot 2026-10-12)
+  history: API serves a rolling ~5 years (from 2021-01-01 on 2026-10-12); older days only in TP Archives
+  recoverable: partly   # via the API only while inside the rolling window
+  verified: true   # /api/v1/operationaldatas parsed 2026-10-12
+  phase: 0
+
+entsoe:
+  name: ENTSO-E generation by fuel
+  layer: L1
+  portal: https://transparency.entsoe.eu
+  frequency: hourly
+  auth: { env: ENTSOE_TOKEN }
+  areas: config/entsoe_areas.csv (EU-27 country EIC codes)
+  recoverable: true
+  verified: true   # parsed 2026-10-13; fossil gas (B04) only; MT returns no data
+  phase: 2
+
+weather:
+  name: Open-Meteo historical API (ERA5), daily Tmax/Tmin at one point per EU-27 country
+  layer: L1
+  portal: https://open-meteo.com
+  frequency: daily
+  auth: none
+  points: config/weather_points.csv (capitals, grade C proxy; checked against eurostat_hdd)
+  terms: free for non-commercial use; fair-use quota (HTTP 429 when exceeded)
+  recoverable: true
+  verified: true   # parsed 2026-10-12; history from 1940
+  phase: 2
+
+henry_hub:
+  name: EIA Henry Hub daily spot (RNGWHHD)
+  layer: L2
+  portal: https://www.eia.gov/opendata/
+  frequency: daily
+  auth: { env: EIA_API_KEY }
+  recoverable: true
+  verified: true   # fetched with key 2026-10-13
+  phase: 0
+
+ecb_fx:
+  name: ECB euro reference rate USD/EUR
+  layer: L2
+  portal: https://data.ecb.europa.eu
+  frequency: daily
+  auth: none
+  recoverable: true
+  verified: true   # fetched and parsed 2026-10-12
+  phase: 0
+
+eua_auctions:
+  name: EEX EUA primary-auction results (2012 → today)
+  layer: L2
+  portal: https://www.eex.com/en/market-data/market-data-hub/environmentals/eex-eua-primary-auction-spot-download
+  frequency: daily (auction days)
+  auth: none
+  grade: A    # exchange-published clearing prices
+  recoverable: true
+  verified: true   # history zip + 2026 file
+  phase: 0
+
+pink_sheet_monthly:
+  name: World Bank Pink Sheet, monthly (Henry Hub, Europe gas/TTF, Japan LNG, urea, DAP)
+  layer: L2
+  portal: https://www.worldbank.org/en/research/commodity-markets
+  url: https://thedocs.worldbank.org/en/doc/74e8be41ceb20fa0da750cda2f6b9e4e-0050012026/related/CMO-Historical-Data-Monthly.xlsx
+  frequency: monthly
+  auth: none
+  licence: CC BY 4.0
+  grade: A    # official monthly anchor
+  recoverable: true
+  verified: true   # parsed 2026-10-12
+  phase: 1
+  breaks:
+    - "Natural gas, Europe = TTF only from 2015-04 (earlier: import-border blend)"
+    - "Urea = f.o.b. Black Sea until 2022-02, f.o.b. Middle East from 2022-03"
+  note: The URL embeds a yearly document id; the old worldbank.org mirror serves a stale 2016 file.
+
+ttf_daily_candidate:
+  name: Candidate daily TTF (yfinance TTF=F or paid feed)
+  layer: L2
+  frequency: daily
+  auth: none
+  grade: C    # unusable until it passes the monthly reconciliation test
+  recoverable: false   # snapshot daily
+  verified: false
+  phase: 0
+
+comext:
+  name: Eurostat Comext imports by origin (CN 2814, 3102 10)
+  layer: L4
+  portal: https://ec.europa.eu/eurostat/comext/newxtweb/
+  api: https://ec.europa.eu/eurostat/api/comext/dissemination/statistics/1.0/data/DS-045409
+  scope: reporter EU27_2020, all partners, products 2814 and 310210, imports, tonnes and euros
+  frequency: monthly
+  auth: none
+  recoverable: true
+  verified: true   # parsed 2026-10-12
+  phase: 1
+
+ets_registry:
+  name: EU ETS verified emissions per installation (EUTL / EEA viewer)
+  layer: L2
+  frequency: annual
+  auth: none
+  recoverable: true
+  verified: false
+  phase: 1
+
+gem_plants:
+  name: Global Energy Monitor — Global Chemicals Inventory (ammonia plants)
+  layer: L2
+  portal: https://www.gem.wiki
+  frequency: static
+  licence: check
+  recoverable: true
+  verified: false
+  phase: 1
+
+portwatch:
+  name: IMF PortWatch chokepoint transits (Hormuz)
+  layer: L4
+  portal: https://portwatch.imf.org
+  frequency: daily
+  auth: none
+  api: ArcGIS FeatureServer Daily_Chokepoints_Data (key-free)
+  history: from 2019-01-01 only; vessel classes have no LNG split (LNG sits in n_tanker)
+  role: primary source for the regime indicator R(t)
+  recoverable: false   # snapshot weekly: definitions and filters change
+  verified: true   # parsed 2026-10-12
+  phase: 0
+
+wto_hormuz:
+  name: WTO Strait of Hormuz Trade Tracker
+  layer: L4
+  portal: https://datalab.wto.org/Strait-of-Hormuz-Trade-Tracker
+  frequency: weekly
+  auth: none
+  recoverable: false
+  verified: false
+  phase: 0
+
+aisstream:
+  name: aisstream.io live terrestrial AIS
+  layer: L4
+  portal: https://aisstream.io
+  frequency: streaming
+  auth: { env: AISSTREAM_API_KEY }
+  recoverable: false   # ETAs/destinations are lost forever if not archived live
+  verified: true   # subscription accepted 2026-10-13
+  phase: 0
+
+eurostat_population:
+  name: Eurostat population on 1 January (demo_pjan), EU-27 countries
+  layer: L1
+  frequency: annual
+  auth: none
+  grade: A
+  role: population weights for the EU-27 HDD
+  recoverable: true
+  verified: true   # parsed 2026-10-12
+  phase: 2
+
+eurostat_hdd:
+  name: Eurostat heating degree days by country, monthly (nrg_chdd_m; JRC data)
+  layer: L1
+  frequency: monthly
+  auth: none
+  grade: A
+  role: reference for the daily HDD built from weather points (gas_balance.hdd_check)
+  recoverable: true
+  verified: true   # parsed 2026-10-12
+  phase: 2

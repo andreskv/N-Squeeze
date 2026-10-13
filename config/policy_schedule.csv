@@ -1,0 +1,34 @@
+parameter,scope,value,unit,effective_from,effective_to,grade,source,notes
+cbam_factor,EU,0.025,share,2026-01-01,2026-12-31,A,ETS Directive Art. 10a(1a),Free allocation remaining 97.5%
+cbam_factor,EU,0.05,share,2027-01-01,2027-12-31,A,ETS Directive Art. 10a(1a),
+cbam_factor,EU,0.10,share,2028-01-01,2028-12-31,A,ETS Directive Art. 10a(1a),COM(2026) 616 would restore 15% from 2028 — scenario only
+cbam_factor,EU,0.225,share,2029-01-01,2029-12-31,A,ETS Directive Art. 10a(1a),
+cbam_factor,EU,0.485,share,2030-01-01,2030-12-31,A,ETS Directive Art. 10a(1a),
+cbam_factor,EU,0.61,share,2031-01-01,2031-12-31,A,ETS Directive Art. 10a(1a),
+cbam_factor,EU,0.735,share,2032-01-01,2032-12-31,A,ETS Directive Art. 10a(1a),
+cbam_factor,EU,0.86,share,2033-01-01,2033-12-31,A,ETS Directive Art. 10a(1a),
+cbam_factor,EU,1.00,share,2034-01-01,,A,ETS Directive Art. 10a(1a),
+ets_benchmark,NH3,1.57,tCO2e/t,2021-01-01,2025-12-31,B,S&P Global Platts,
+ets_benchmark,NH3,1.522,tCO2e/t,2026-01-01,2030-12-31,B,IR (EU) 2026/1412 via CBAM Guide,OI-02 verify on EUR-Lex
+ets_benchmark,HNO3,0.151,tCO2e/t,2026-01-01,2030-12-31,B,CBAM Guide,N2O-dominated
+cbam_price,EU,82.32,EUR/tCO2,2026-07-01,2026-09-30,B,CBAM Guide tracker,Q3 2026 quarterly average of EUA auctions; weekly from 2027
+duty_ad_valorem,MFN:2814,0.055,share,2000-01-01,,A,Commission statements,Normal MFN rate ammonia
+duty_ad_valorem,MFN:3102.10,0.065,share,2000-01-01,,A,Commission statements,Normal MFN rate urea
+duty_ad_valorem,MFN:2814,0.0,share,2026-05-30,2027-05-31,B,Council via BCInsight / Global Trade Alert,Within quota; end date approximate (May 2027) — OI-15
+duty_ad_valorem,MFN:3102.10,0.0,share,2026-05-30,2027-05-31,B,Council via BCInsight / Global Trade Alert,Within quota; excludes RU/BY — OI-15
+duty_ad_valorem,PREF:2814,0.0,share,2000-01-01,,B,CRU / BCInsight,Trinidad / Algeria / Egypt preferential
+duty_ad_valorem,PREF:3102.10,0.0,share,2000-01-01,,B,CRU / BCInsight,Trinidad / Algeria / Egypt preferential
+duty_ad_valorem,RU_BY:3102.10,0.065,share,2025-07-01,,B,Regulation (EU) 2025/1227,Not suspended
+duty_specific,RU_BY:3102,40,EUR/t,2025-07-01,2026-06-30,B,Interfax (proposal) / Reg. (EU) 2025/1227,OI-06 confirm adopted schedule
+duty_specific,RU_BY:3102,60,EUR/t,2026-07-01,2027-06-30,B,Interfax (proposal) / Reg. (EU) 2025/1227,OI-06
+duty_specific,RU_BY:3102,80,EUR/t,2027-07-01,2028-06-30,B,Interfax (proposal) / Reg. (EU) 2025/1227,OI-06
+duty_specific,RU_BY:3102,315,EUR/t,2028-07-01,,B,Interfax (proposal) / Reg. (EU) 2025/1227,OI-06 top rate also applies above quota
+duty_specific,RU_BY:3105,45,EUR/t,2025-07-01,2026-06-30,B,Interfax (proposal) / Reg. (EU) 2025/1227,Compound fertilisers
+duty_specific,RU_BY:3105,70,EUR/t,2026-07-01,2027-06-30,B,Interfax (proposal) / Reg. (EU) 2025/1227,
+duty_specific,RU_BY:3105,95,EUR/t,2027-07-01,2028-06-30,B,Interfax (proposal) / Reg. (EU) 2025/1227,
+duty_specific,RU_BY:3105,430,EUR/t,2028-07-01,,B,Interfax (proposal) / Reg. (EU) 2025/1227,
+duty_specific,RU_BY:2814,,EUR/t,2025-07-01,,C,—,OI-05 is CN 2814 covered at all? Regulation names 3102 and 3105
+ru_by_quota,RU_BY:3102,2.7,Mt,2025-07-01,2026-06-30,B,Interfax (proposal),Year mapping to verify — OI-06
+ru_by_quota,RU_BY:3102,1.8,Mt,2026-07-01,2027-06-30,B,Interfax (proposal),Year mapping to verify — OI-06
+ru_by_quota,RU_BY:3102,0.9,Mt,2027-07-01,2028-06-30,B,Interfax (proposal),Year mapping to verify — OI-06
+storage_target,EU,0.90,share,2025-01-01,2027-12-31,B,Argus,Reachable any time 1 Oct–1 Dec; up to 10 pp deviation in difficult conditions

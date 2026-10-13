@@ -1,0 +1,194 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# N-Squeeze
+#
+#   A = primary or audited source        (regulation text, 10-K, stoichiometry)
+#   B = reputable secondary source       (trade press, industry body, IPCC default)
+#   C = derived, placeholder or fitted   → must be flagged in every output using it
+# Values that change over time (CBAM factor, duties, benchmarks, CBAM price)
+#
+# ─────────────────────────────────────────────────────────────────────────────
+
+meta:
+  schema_version: 1
+  last_reviewed: 2026-10-12
+
+units:
+  hhv_over_lhv_gas:
+    value: 1.108
+    unit: ratio
+    grade: B
+    basis: Physical range ≈ 1.10–1.11 for methane-rich pipeline gas
+    open_item: OI-12  # use TTF/NL gas-quality spec for more precision
+
+ammonia_tech:
+  energy_best_practice:
+    value: 28.5
+    range: [28.0, 29.0]
+    unit: GJ_LHV/t_NH3
+    grade: B
+    source: IFA (2009) Energy efficiency in ammonia production
+    url: https://www.fertilizer.org/wp-content/uploads/2023/01/2009_IFA_energy_efficiency.pdf
+  energy_best_revamped:
+    value: 29.7
+    unit: GJ_LHV/t_NH3
+    grade: B
+    source: TNO ammonia plant benchmarking report
+    url: https://publications.tno.nl/publication/34628944/0Gp1V7/e09011.pdf
+  energy_eu_average:
+    value: 35.7
+    unit: GJ_LHV/t_NH3
+    grade: B
+    source: Secondary citation in Yara Ferrara permit filing (MITE)
+    url: https://va.mite.gov.it/File/Documento/259692
+    caveat: Industry benchmark of uncertain year; net energy includes some non-gas inputs
+  energy_world_average_2008:
+    value: 36.6
+    range: [27.0, 58.2]
+    unit: GJ_LHV/t_NH3
+    grade: B
+    source: IFA (2009), 93 plants
+    url: https://www.fertilizer.org/wp-content/uploads/2023/01/2009_IFA_energy_efficiency.pdf
+  gas_share_of_production_cost:
+    range: [0.70, 0.90]
+    unit: share
+    grade: B
+    source: CTC-N citing IEA (2007)
+    url: https://www.ctc-n.org/technologies/ammonia
+    use: narrative only — not a model input
+
+carbon:
+  gas_emission_factor:
+    value: 56.1
+    unit: tCO2/TJ_LHV
+    grade: B
+    source: IPCC 2006 Guidelines default for natural gas
+    open_item: OI-13
+  urea_bound_co2_counted_as_emitted:
+    value: true
+    unit: bool
+    grade: C
+    basis: My reading of the EU MRR
+    open_item: OI-08
+
+us_cost:
+  h_cf_mmbtu_per_t:
+    value: 35.3
+    range: [35.3, 36.4]
+    unit: MMBtu/t_NH3
+    grade: A
+    source: CF Industries 10-K FY2023 ($32/short ton per $1/MMBtu); FY2020 ($33)
+    url: https://www.sec.gov/Archives/edgar/data/1324404/000132440424000008/cf-20231231.htm
+    derivation: 32 / 0.9072 = 35.3 ; 33 / 0.9072 = 36.4
+  cf_gas_share_2022:
+    value: 0.50
+    unit: share_of_total_production_cost
+    grade: A
+    source: CF Industries 10-K FY2022 (realised gas $7.18/MMBtu)
+    url: https://www.sec.gov/Archives/edgar/data/1324404/000132440423000006/cf-20221231.htm
+    use: calibration anchor for O_US, one year only
+  cf_realised_gas_2022:
+    value: 7.18
+    unit: USD/MMBtu
+    grade: A
+    source: CF Industries 10-K FY2022
+  henry_hub_basis:
+    value: 0.0
+    range: [-0.30, 0.30]
+    unit: USD/MMBtu
+    grade: C
+    basis: Sensitivity band only
+    open_item: OI-14
+
+cf_sensitivities_usd_per_short_ton_per_usd_mmbtu:
+  # CF 10-K FY2023 — an audited, independent check on the whole conversion chain
+  ammonia:       { value: 32, grade: A }
+  granular_urea: { value: 22, grade: A }
+  uan_32:        { value: 14, grade: A }
+  an:            { value: 15, grade: A }
+
+products:
+  nh3_per_t_urea:
+    value: 0.567
+    unit: t_NH3/t_urea
+    grade: A
+    basis: Stoichiometry 2 × 17.03 / 60.06
+  co2_bound_per_t_urea:
+    value: 0.733
+    unit: tCO2/t_urea
+    grade: A
+    basis: Stoichiometry 44.01 / 60.06
+  urea_conversion_gas:
+    value: 4.3
+    unit: MMBtu/t_urea
+    grade: C
+    basis: Derived — 24.3 − 0.567 × 35.3 from CF sensitivities (author inference, not disclosed)
+
+cbam:
+  default_markup_fertilisers:
+    value: 0.01
+    unit: share
+    grade: B
+    source: CRU / BCInsight, Jan 2026
+    url: https://www.bcinsight.crugroup.com/2026/01/16/119787
+    open_item: OI-03
+  benchmark_ammonia:
+    value: 1.522
+    unit: tCO2e/t_NH3
+    grade: C
+    basis: PLACEHOLDER — ETS benchmark used until the IR 2025/2620 Annex value is extracted
+    open_item: OI-01
+  default_embedded_emissions:   # tCO2e/t NH3, before mark-up
+    DZ: { value: 2.101, grade: B, name: Algeria }
+    RU: { value: 2.283, grade: B, name: Russia }
+    TT: { value: 2.444, grade: B, name: Trinidad and Tobago }
+    generic: { value: 2.68, grade: B, name: Generic ammonia default, source: CBAM Guide }
+    _source: CRU / BCInsight Jan 2026; confirm full table in IR 2025/2621
+    _open_item: OI-03
+
+fitted:
+  # Calibrated jointly on pre-2026 curtailment episodes (config/episodes.csv), then FROZEN.
+  # Code refuse to compute U_pred while these are null.
+  other_cash_cost_eu:  { value: null, unit: EUR/t_NH3, grade: C, status: fitted }
+  other_cash_cost_us:  { value: null, unit: USD/t_NH3, grade: C, status: fitted }
+  run_threshold_theta: { value: null, unit: EUR/t_NH3, grade: C, status: fitted }
+  run_softness_s:      { value: null, unit: EUR/t_NH3, grade: C, status: fitted }
+  margin_lookback_days: { value: 30, unit: days, grade: C, status: starting_value }
+  freight:             { value: null, unit: EUR/t, grade: C, status: fitted_per_route, note: No free source; report wedge separately }
+
+assumptions:
+  # Explicit sensitivity bands, used where no free series exists. Results are always reported at both ends of the band
+  urea_freight_usd_t:
+    range: [15.0, 80.0]
+    unit: USD/t_urea
+    grade: C
+    basis: Bulk urea freight to NW Europe; no free series. Wide band spanning calm and 2021–22 freight markets
+    open_item: OI-16
+  urea_duty_band:
+    range: [0.0, 0.065]
+    unit: share
+    grade: B
+    basis: Preferential origins 0 % to MFN 6.5 % (policy_schedule.csv); the FOB quote's origin mix is unknown
+
+validation:
+  reconciliation_tolerance:
+    value: 0.03
+    unit: share
+    grade: C
+    basis: Pre-set tolerance — daily series monthly mean vs World Bank/IMF monthly
+  onset_window_weeks:
+    value: 4
+    unit: weeks
+    grade: C
+    basis: Pre-set ± window for curtailment onset timing
+  eaui_auc_kill_threshold:
+    value: 0.75
+    unit: AUC
+    grade: C
+    basis: Pre-set kill criterion for Layer 3
+
+reference_volumes_2024:
+  # EU imports, for CBAM sanity check (validation test 6)
+  ammonia_mt:        { value: 2.0, grade: B, source: Just Food }
+  urea_mt:           { value: 5.9, grade: B, source: Just Food }
+  n_mixtures_mt:     { value: 6.7, grade: B, source: Just Food }
+  copa_cogeca_cbam_2026_eur_m: { value: 820, grade: B, source: Argus }
