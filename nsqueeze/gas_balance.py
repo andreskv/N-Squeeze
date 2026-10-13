@@ -118,41 +118,174 @@ BUCKETS = ("norway", "lng", "other_pipe", "production")
 
 
 def classify_points(interconnections: pd.DataFrame) -> pd.DataFrame:
-    """Map (pointKey, EU-side operator) to a supply bucket.
+    """Map (pointKey, EU-side operator) on the EU-27 boundary to a supply bucket.
 
     ``interconnections`` is ``config/entsog_interconnections.csv`` (an ENTSOG API
-    snapshot). Rules, in order: LNG terminal → ``lng``; production → ``production``;
-    from Norway → ``norway``; from any other non-EU country (incl. UK) → ``other_pipe``.
-    Only flows *into* an EU-27 system count; intra-EU points are transit.
+    snapshot). A row crosses the boundary in either direction. The bucket comes from
+    the side outside the EU-27 system, in this order: LNG terminal → ``lng``;
+    production → ``production``; Norway → ``norway``; any other non-EU transmission
+    system (incl. UK) → ``other_pipe``. Intra-EU points are transit and drop out.
+    Virtual points (``VTP-``) drop out too: Spain's virtual LNG tank (TVB) restates
+    the send-out that the individual terminals already report.
     """
     ic = interconnections
-    into_eu = ic.toCountryKey.isin(EU27_ENTSOG)
-    from_infra = ic.fromInfrastructureTypeLabel.fillna("")
-    bucket = np.select(
-        [
-            from_infra.eq("LNG Terminals"),
-            from_infra.eq("Production"),
-            ic.fromCountryKey.eq("NO"),
-            ~ic.fromCountryKey.isin(EU27_ENTSOG) & from_infra.eq("Transmission"),
-        ],
-        ["lng", "production", "norway", "other_pipe"],
-        default="",
+    into = ic.toCountryKey.isin(EU27_ENTSOG)
+    out_of = ic.fromCountryKey.isin(EU27_ENTSOG) & ~ic.toCountryKey.isin(EU27_ENTSOG)
+    rows = []
+    for side, op, country, infra in (
+        (into, ic.toOperatorKey, ic.fromCountryKey, ic.fromInfrastructureTypeLabel),
+        (out_of, ic.fromOperatorKey, ic.toCountryKey, ic.toInfrastructureTypeLabel),
+    ):
+        infra = infra.fillna("")
+        bucket = np.select(
+            [
+                infra.eq("LNG Terminals"),
+                infra.eq("Production"),
+                country.eq("NO"),
+                ~country.isin(EU27_ENTSOG) & infra.eq("Transmission"),
+            ],
+            ["lng", "production", "norway", "other_pipe"],
+            default="",
+        )
+        rows.append(
+            pd.DataFrame({"pointKey": ic.pointKey, "operatorKey": op, "bucket": bucket})[side]
+        )
+    out = pd.concat(rows)
+    keep = (out.bucket != "") & out.operatorKey.notna() & ~out.pointKey.str.startswith("VTP-")
+    return out[keep].drop_duplicates(["pointKey", "operatorKey"]).reset_index(drop=True)
+
+
+def landing_points(classes: pd.DataFrame, landings: pd.DataFrame) -> pd.DataFrame:
+    """Add the series from ``config/entsog_landing_points.csv``.
+
+    The interconnection snapshot lists only points valid now, so it misses the
+    per-operator keys at Emden and Dornum and the closed Russian routes (Nord Stream
+    legs at Greifswald, Kondratki). Several operators report one landing flow: the
+    file names each series' landing and bucket.
+    """
+    extra = landings[["pointKey", "operatorKey", "bucket", "landing"]]
+    rest = classes.merge(extra[["pointKey", "operatorKey"]], how="left", indicator=True)
+    rest = rest[rest._merge == "left_only"].drop(columns="_merge")
+    return pd.concat([rest, extra], ignore_index=True)
+
+
+def archive_points(flows: pd.DataFrame, table: pd.DataFrame):
+    """Give TP Archives series without an API key (``ENTSOG.EIC.…``, ``ENTSOG.NAME.…``)
+    a place in the buckets, from ``config/entsog_archive_points.csv``.
+
+    A row with a ``pointKey`` renames the series to that API key, so the normal
+    classification applies. A row with a ``bucket`` (a point that has no API
+    counterpart) becomes its own point. Returns (flows, extra class rows).
+    A renamed series never replaces a day the API key already has.
+    """
+    stem, direction = (
+        flows.series_id.str.rsplit(".", n=1).str[0],
+        flows.series_id.str.rsplit(".", n=1).str[1],
     )
-    out = pd.DataFrame({"pointKey": ic.pointKey, "operatorKey": ic.toOperatorKey, "bucket": bucket})
-    return out[into_eu & (out.bucket != "")].drop_duplicates().reset_index(drop=True)
+    t = table.fillna("").reset_index(drop=True)
+    new = {}
+    for i, r in t.iterrows():
+        new[r.series] = (
+            f"ENTSOG.{r.operatorKey}.{r.pointKey}" if r.pointKey else f"ENTSOG.ARCHIVE.A{i}"
+        )
+    renamed = stem.map(new)
+    out = flows.assign(series_id=(renamed + "." + direction).fillna(flows.series_id))
+    out = out.assign(_old=renamed.isna()).sort_values("_old", ascending=False)
+    out = out.drop_duplicates(["series_id", "observed_at"]).drop(columns="_old").sort_index()
+    m = t[t.pointKey == ""]
+    extra = pd.DataFrame(
+        {
+            "pointKey": [f"A{i}" for i in m.index],
+            "operatorKey": "ARCHIVE",
+            "bucket": m.bucket.to_numpy(),
+            "landing": m.landing.replace("", None).to_numpy(),
+        }
+    )
+    return out, extra
 
 
 def supply_from_entsog(flows: pd.DataFrame, classes: pd.DataFrame) -> pd.DataFrame:
-    """Daily supply by bucket, TWh/d, from PIT rows of the ``entsog`` source.
+    """Daily net supply across the EU-27 boundary by bucket, TWh/d, from ``entsog`` PIT rows.
 
-    Entry flows only, reported by the EU-side operator, so each physical flow is
-    counted once even when both TSOs publish it.
+    Net = entry − exit, as reported by the EU-side operator, so each physical flow is
+    counted once even when both TSOs publish it, and gas that leaves the EU and comes
+    back (TurkStream via Serbia, TAP via Italy) cancels. If ``classes`` has a
+    ``landing`` column, series that share a landing point count once (the largest).
     """
     parts = flows.series_id.str.split(".", expand=True)
     f = flows.assign(operatorKey=parts[1], pointKey=parts[2], direction=parts[3])
-    f = f[f.direction == "entry"].merge(classes, on=["pointKey", "operatorKey"])
-    out = f.pivot_table(index="observed_at", columns="bucket", values="value", aggfunc="sum")
+    f = f[f.direction.isin(["entry", "exit"])].merge(classes, on=["pointKey", "operatorKey"])
+    f["net"] = f.value.where(f.direction == "entry", -f.value)
+    if "landing" in f:
+        # Several operators report one landing flow: per point and day, net each
+        # series, then keep the largest series of each landing point once.
+        f["landing"] = f.landing.fillna(f.pointKey + "|" + f.operatorKey)
+        per_series = f.groupby(
+            ["observed_at", "bucket", "landing", "pointKey", "operatorKey"]
+        ).net.sum()
+        f = per_series.groupby(["observed_at", "bucket", "landing"]).max().reset_index()
+    out = f.pivot_table(index="observed_at", columns="bucket", values="net", aggfunc="sum")
     return units.kwh_to_twh(out.reindex(columns=list(BUCKETS)).fillna(0.0))
+
+
+# Eurostat EU-27 country codes (Greece is EL here, GR in ENTSOG)
+EU27_EUROSTAT = frozenset((EU27_ENTSOG - {"GR"}) | {"EL"})
+
+
+def eurostat_net_by_bucket(trade: pd.DataFrame) -> pd.DataFrame:
+    """Monthly net imports into the EU-27 by bucket, TWh, from ``eurostat_gas_trade`` rows.
+
+    Pipeline gas = natural gas (G3000) − LNG (G3200), per partner. Net = imports −
+    exports. Partners inside the EU-27, ``TOTAL`` and ``NSP`` (not specified) drop
+    out; regional "other" partners are outside the EU-27 and count as other pipeline.
+
+    Eurostat does not publish the EU-27 aggregate for some months (most of 2019 and
+    all of 2020). A month counts only if both the import total and Norway are
+    published. Other months are left out, not read as zero.
+    """
+    parts = trade.series_id.str.split(".", expand=True)
+    t = trade.assign(flow=parts[2], siec=parts[3], partner=parts[4])
+    imp = t[(t.flow == "IMP") & (t.siec == "G3000")]
+    published = set(imp[imp.partner == "TOTAL"].observed_at) & set(
+        imp[imp.partner == "NO"].observed_at
+    )
+    t = t[t.observed_at.isin(published)]
+    t = t[~t.partner.isin(EU27_EUROSTAT | {"TOTAL", "NSP"})]
+    t["signed"] = t.value.where(t.flow == "IMP", -t.value)
+    w = t.pivot_table(
+        index="observed_at", columns=["siec", "partner"], values="signed", aggfunc="sum"
+    )
+    w = w.fillna(0.0)
+    lng = w["G3200"].sum(axis=1)
+    pipe = w["G3000"].sub(w["G3200"].reindex(columns=w["G3000"].columns, fill_value=0.0))
+    out = pd.DataFrame(
+        {
+            "norway": pipe.get("NO", 0.0),
+            "lng": lng,
+            "other_pipe": pipe.drop(columns="NO", errors="ignore").sum(axis=1),
+        }
+    )
+    return units.tj_to_twh(out)
+
+
+def bucket_check(entsog_daily: pd.DataFrame, eurostat_monthly: pd.DataFrame, tolerance: float):
+    """Share of months where the ENTSOG bucket is within ``tolerance`` of Eurostat.
+
+    Months need a full set of ENTSOG days. Returns (summary per bucket, monthly table).
+    """
+    days = entsog_daily.resample("MS").size()
+    ours = entsog_daily.resample("MS").sum()[days == days.index.days_in_month]
+    j = ours.join(eurostat_monthly, lsuffix="_entsog", rsuffix="_eurostat", how="inner")
+    rows = {}
+    for b in eurostat_monthly.columns:
+        err = j[f"{b}_entsog"] / j[f"{b}_eurostat"] - 1
+        j[f"{b}_err"] = err
+        rows[b] = {
+            "months": int(err.notna().sum()),
+            "within": float((err.abs() <= tolerance).mean()),
+            "median_err": float(err.median()),
+        }
+    return pd.DataFrame(rows).T, j
 
 
 # Model

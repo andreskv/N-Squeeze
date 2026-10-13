@@ -20,6 +20,7 @@ MMBTU_PER_MWH = GJ_PER_MWH / GJ_PER_MMBTU  # 3.4121…
 T_PER_SHORT_TON = 0.90718474
 GJ_PER_TJ = 1_000.0
 KWH_PER_TWH = 1e9
+TJ_PER_TWH = 3600.0
 GWH_PER_TWH = 1e3
 
 # Molar masses, g/mol
@@ -51,6 +52,11 @@ def mmbtu_to_mwh(x: Num) -> Num:
 def kwh_to_twh(x: Num) -> Num:
     """ENTSOG flows (kWh/d) → TWh/d, the unit of the AGSI+ storage balance."""
     return x / KWH_PER_TWH
+
+
+def tj_to_twh(x: Num) -> Num:
+    """Eurostat gas trade (TJ, GCV) → TWh. 1 TWh = 3.6 PJ by definition."""
+    return x / TJ_PER_TWH
 
 
 def gwh_to_twh(x: Num) -> Num:

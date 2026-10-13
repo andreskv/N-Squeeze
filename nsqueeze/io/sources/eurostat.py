@@ -6,6 +6,9 @@
                         population-weighted HDD.
 ``eurostat_hdd``        monthly heating degree days by country (nrg_chdd_m, JRC data,
                         Eurostat definition). The reference I check my daily HDD against.
+``eurostat_gas_trade``  EU-27 monthly gas imports (nrg_ti_gasm) and exports (nrg_te_gasm)
+                        by partner, natural gas (G3000) and LNG (G3200), TJ (GCV). The
+                        reference for the ENTSOG supply buckets. Checked live on 2026-10-13.
 """
 
 from __future__ import annotations
@@ -177,3 +180,40 @@ class EurostatHDD(_EurostatStats):
     fixed: ClassVar[dict[str, str]] = {"indic_nrg": "HDD", "unit": "NR"}
     prefix = "ESTAT.HDD"
     unit = "degree-days"
+
+
+class EurostatGasTrade(Source):
+    name = "eurostat_gas_trade"
+    verified = True
+    datasets: ClassVar[dict[str, str]] = {"IMP": "nrg_ti_gasm", "EXP": "nrg_te_gasm"}
+
+    def fetch(self, start: dt.date, end: dt.date) -> pd.DataFrame:
+        frames = []
+        for flow, dataset in self.datasets.items():
+            r = self.client.get(
+                STATS_URL + dataset,
+                params={
+                    "geo": "EU27_2020",  # fixed composition, so partner = across the boundary
+                    "unit": "TJ_GCV",
+                    "siec": ["G3000", "G3200"],
+                    "sinceTimePeriod": f"{start:%Y-%m}",
+                },
+            )
+            r.raise_for_status()
+            self.keep_raw(r.content, "json")
+            body = r.json()
+            df = parse_jsonstat(body)
+            df["observed_at"] = df.time.map(_month_start)
+            df = df[df.observed_at <= pd.Timestamp(end)]
+            frames.append(
+                pd.DataFrame(
+                    {
+                        "series_id": f"ESTAT.GAS.{flow}." + df.siec + "." + df.partner,
+                        "observed_at": df.observed_at,
+                        "value": df.value,
+                        "unit": "TJ_GCV",
+                        "meta": json.dumps({"updated": body.get("updated")}),
+                    }
+                )
+            )
+        return pd.concat(frames, ignore_index=True)

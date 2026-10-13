@@ -85,6 +85,7 @@ def test_entsog_supply_counts_each_flow_once():
     ic = pd.DataFrame(
         {
             "pointKey": ["P1", "P1", "L1", "X1", "U1"],
+            "fromOperatorKey": ["NO-X", "NO-X", "FR-L", "PL-Y", "NO-X"],
             "toOperatorKey": ["DE-A", "NL-B", "FR-C", "DE-A", "UK-Z"],
             "fromCountryKey": ["NO", "NO", "FR", "PL", "NO"],
             "toCountryKey": ["DE", "NL", "FR", "DE", "UK"],
@@ -95,6 +96,7 @@ def test_entsog_supply_counts_each_flow_once():
                 "Transmission",
                 "Transmission",
             ],
+            "toInfrastructureTypeLabel": ["Transmission"] * 5,
         }
     )
     cls = gb.classify_points(ic)
@@ -115,3 +117,138 @@ def test_entsog_supply_counts_each_flow_once():
     assert s.loc["2025-01-01", "norway"] == pytest.approx(2.0)
     assert s.loc["2025-01-01", "lng"] == pytest.approx(1.0)
     assert s.loc["2025-01-01", "other_pipe"] == 0.0
+
+
+def test_entsog_supply_is_net_across_the_boundary():
+    ic = pd.DataFrame(
+        {
+            "pointKey": ["T1", "R1", "R2", "VTP-00043", "L2"],
+            "fromOperatorKey": ["TR-X", "BG-A", "RS-Y", "ES-L", "ES-L"],
+            "toOperatorKey": ["BG-A", "RS-Y", "HU-B", "ES-T", "ES-T"],
+            "fromCountryKey": ["TR", "BG", "RS", "ES", "ES"],
+            "toCountryKey": ["BG", "RS", "HU", "ES", "ES"],
+            "fromInfrastructureTypeLabel": ["Transmission", "Transmission", "Transmission",
+                                            "LNG Terminals", "LNG Terminals"],
+            "toInfrastructureTypeLabel": ["Transmission"] * 5,
+        }
+    )  # fmt: skip
+    cls = gb.classify_points(ic)
+    assert set(zip(cls.pointKey, cls.operatorKey, cls.bucket, strict=True)) == {
+        ("T1", "BG-A", "other_pipe"),
+        ("R1", "BG-A", "other_pipe"),  # leaves the EU: counted by the EU-side operator
+        ("R2", "HU-B", "other_pipe"),
+        ("L2", "ES-T", "lng"),  # the virtual tank VTP-00043 is dropped
+    }
+    flows = pd.DataFrame(
+        {
+            "series_id": [
+                "ENTSOG.BG-A.T1.entry",  # 10 in from Turkey
+                "ENTSOG.BG-A.R1.exit",  # 6 out to Serbia ...
+                "ENTSOG.HU-B.R2.entry",  # ... and the same 6 back in
+                "ENTSOG.ES-T.VTP-00043.entry",
+                "ENTSOG.ES-T.L2.entry",
+            ],
+            "observed_at": pd.to_datetime(["2025-01-01"] * 5),
+            "value": [10e9, 6e9, 6e9, 4e9, 4e9],
+        }
+    )
+    s = gb.supply_from_entsog(flows, cls)
+    assert s.loc["2025-01-01", "other_pipe"] == pytest.approx(10.0)
+    assert s.loc["2025-01-01", "lng"] == pytest.approx(4.0)
+
+
+def test_norway_landing_counts_once():
+    cls = pd.DataFrame({"pointKey": ["Z1"], "operatorKey": ["BE-A"], "bucket": ["norway"]})
+    landings = pd.DataFrame(
+        {
+            "pointKey": ["D1", "D2", "E1", "E2"],
+            "operatorKey": ["DE-A", "DE-B", "DE-A", "NL-C"],
+            "bucket": "norway",
+            "landing": ["Dornum", "Dornum", "Emden", "Emden"],
+        }
+    )
+    cls = gb.landing_points(cls, landings)
+    flows = pd.DataFrame(
+        {
+            "series_id": [
+                "ENTSOG.BE-A.Z1.entry",
+                "ENTSOG.DE-A.D1.entry",
+                "ENTSOG.DE-B.D2.entry",  # same Dornum flow, reported again
+                "ENTSOG.DE-A.E1.entry",
+                "ENTSOG.NL-C.E2.entry",  # Emden, measured a little higher
+            ],
+            "observed_at": pd.to_datetime(["2025-01-01"] * 5),
+            "value": [1e9, 5e9, 5e9, 3e9, 3.2e9],
+        }
+    )
+    s = gb.supply_from_entsog(flows, cls)
+    assert s.loc["2025-01-01", "norway"] == pytest.approx(1 + 5 + 3.2)
+
+
+def test_eurostat_buckets_and_check():
+    ids = [
+        "ESTAT.GAS.IMP.G3000.NO",
+        "ESTAT.GAS.IMP.G3000.US",
+        "ESTAT.GAS.IMP.G3200.US",  # all US gas is LNG
+        "ESTAT.GAS.IMP.G3000.DZ",
+        "ESTAT.GAS.EXP.G3000.DZ",
+        "ESTAT.GAS.IMP.G3000.DE",  # intra-EU: drops out
+        "ESTAT.GAS.IMP.G3000.TOTAL",
+    ]
+    trade = pd.DataFrame(
+        {
+            "series_id": ids,
+            "observed_at": pd.Timestamp("2025-01-01"),
+            "value": [3600.0, 1800.0, 1800.0, 900.0, 180.0, 9e9, 9e9],
+        }
+    )
+    gap = pd.DataFrame(  # a month without the EU-27 total is left out, not zero
+        {"series_id": ["ESTAT.GAS.IMP.G3000.US"], "observed_at": pd.Timestamp("2025-02-01"),
+         "value": [1.0]}
+    )  # fmt: skip
+    assert len(gb.eurostat_net_by_bucket(pd.concat([trade, gap]))) == 1
+    e = gb.eurostat_net_by_bucket(trade).iloc[0]
+    assert (e.norway, e.lng, e.other_pipe) == pytest.approx((1.0, 0.5, 0.2))
+    idx = pd.date_range("2025-01-01", "2025-02-28")
+    ours = pd.DataFrame({"norway": 1.05 / 31, "lng": 0.5 / 31, "other_pipe": 0.3 / 31}, index=idx)
+    summary, _ = gb.bucket_check(ours, gb.eurostat_net_by_bucket(trade), tolerance=0.10)
+    assert summary.loc["norway", "within"] == 1.0  # +5%
+    assert summary.loc["other_pipe", "within"] == 0.0  # +50%
+    assert summary.loc["lng", "months"] == 1  # February has no Eurostat row
+
+
+def test_archive_points_rename_and_bucket():
+    table = pd.DataFrame(
+        {
+            "series": ["ENTSOG.EIC.OPX.21ZA", "ENTSOG.NAME.OPY.Tarifa"],
+            "pointKey": ["P1", ""],
+            "operatorKey": ["DE-A", ""],
+            "bucket": ["", "other_pipe"],
+            "landing": ["", ""],
+        }
+    )
+    day = pd.Timestamp("2017-01-01")
+    flows = pd.DataFrame(
+        {
+            "series_id": [
+                "ENTSOG.EIC.OPX.21ZA.entry",
+                "ENTSOG.DE-A.P1.entry",  # the API key already has this day: it wins
+                "ENTSOG.NAME.OPY.Tarifa.entry",
+                "ENTSOG.EIC.OPZ.21ZQ.entry",  # not in the table: unchanged
+            ],
+            "observed_at": [day] * 4,
+            "value": [7e9, 2e9, 3e9, 1e9],
+        }
+    )
+    out, extra = gb.archive_points(flows, table)
+    assert dict(zip(out.series_id, out.value, strict=True)) == {
+        "ENTSOG.DE-A.P1.entry": 2e9,
+        "ENTSOG.ARCHIVE.A1.entry": 3e9,
+        "ENTSOG.EIC.OPZ.21ZQ.entry": 1e9,
+    }
+    cls = pd.concat(
+        [pd.DataFrame({"pointKey": ["P1"], "operatorKey": ["DE-A"], "bucket": ["norway"]}), extra]
+    )
+    s = gb.supply_from_entsog(out, cls)
+    assert s.loc[day, "other_pipe"] == pytest.approx(3.0)
+    assert s.loc[day, "norway"] == pytest.approx(2.0)

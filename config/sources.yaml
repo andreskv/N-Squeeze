@@ -205,3 +205,14 @@ eurostat_hdd:
   recoverable: true
   verified: true   # parsed 2026-10-12
   phase: 2
+
+eurostat_gas_trade:
+  name: Eurostat EU-27 gas imports and exports by partner, monthly (nrg_ti_gasm, nrg_te_gasm)
+  layer: L1
+  frequency: monthly
+  auth: none
+  grade: A
+  role: reference for the ENTSOG supply buckets (tolerance in OI-26)
+  recoverable: true
+  verified: true   # parsed 2026-10-13; TJ (GCV), natural gas G3000 and LNG G3200
+  phase: 2

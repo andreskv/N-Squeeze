@@ -8,7 +8,12 @@ from nsqueeze.io.sources.eex import EUAAuctions
 from nsqueeze.io.sources.eia import HenryHub
 from nsqueeze.io.sources.entsoe import ENTSOEGasGeneration
 from nsqueeze.io.sources.entsog import ENTSOGFlows
-from nsqueeze.io.sources.eurostat import Comext, EurostatHDD, EurostatPopulation
+from nsqueeze.io.sources.eurostat import (
+    Comext,
+    EurostatGasTrade,
+    EurostatHDD,
+    EurostatPopulation,
+)
 from nsqueeze.io.sources.gie import AGSI, ALSI
 from nsqueeze.io.sources.openmeteo import OpenMeteoWeather
 from nsqueeze.io.sources.portwatch import PortWatch
@@ -33,6 +38,7 @@ REGISTRY: dict[str, type[Source]] = {
         Comext,
         EurostatPopulation,
         EurostatHDD,
+        EurostatGasTrade,
         OpenMeteoWeather,
         PortWatch,
         _stub("ttf_daily_candidate", 0),

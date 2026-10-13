@@ -175,6 +175,16 @@ validation:
     unit: share
     grade: C
     basis: Pre-set tolerance — daily series monthly mean vs World Bank/IMF monthly
+  supply_bucket_tolerance:
+    value: 0.10
+    unit: share
+    grade: C
+    basis: Pre-set 13 Oct 2026, before the comparison - monthly ENTSOG net supply per bucket vs Eurostat net imports (nrg_ti_gasm, nrg_te_gasm)
+  supply_bucket_pass_share:
+    value: 0.90
+    unit: share of months
+    grade: C
+    basis: Pre-set 13 Oct 2026 - a bucket passes if at least this share of months 2016-2025 is within supply_bucket_tolerance
   onset_window_weeks:
     value: 4
     unit: weeks

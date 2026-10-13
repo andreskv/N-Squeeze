@@ -12,9 +12,11 @@
   powershell -ExecutionPolicy Bypass -File archivers\schedule_windows.ps1 -WhatIf
 #>
 [CmdletBinding(SupportsShouldProcess)]
-param(
-  [string]$Repo = (Resolve-Path "$PSScriptRoot\..").Path
-)
+param([string]$Repo)
+# Not a param default: Windows PowerShell 5.1 can leave $PSScriptRoot empty there,
+# which pointed every task at C:\archivers.
+if (-not $Repo) { $Repo = Split-Path -Parent $PSScriptRoot }
+if (-not (Test-Path (Join-Path $Repo "archivers\run_archiver.ps1"))) { throw "Repo not found: $Repo" }
 
 $runner = Join-Path $Repo "archivers\run_archiver.ps1"
 $jobs = @(
@@ -23,6 +25,7 @@ $jobs = @(
   @{ Source = "alsi";      At = "08:35" },
   @{ Source = "entsog";    At = "08:40" },
   @{ Source = "weather";   At = "09:00" },
+  @{ Source = "entsoe";    At = "09:05" },
   @{ Source = "ecb_fx";    At = "18:45" },
   @{ Source = "eua_auctions"; At = "18:50" },
   @{ Source = "henry_hub"; At = "23:50" },
@@ -32,6 +35,7 @@ $jobs = @(
   @{ Source = "comext";     At = "07:10"; Weekly = $true; Days = 400 },
   @{ Source = "eurostat_hdd"; At = "07:15"; Weekly = $true; Days = 400 },
   @{ Source = "eurostat_population"; At = "07:20"; Weekly = $true; Days = 800 },
+  @{ Source = "eurostat_gas_trade"; At = "07:25"; Weekly = $true; Days = 400 },
   # Live AIS stream: starts at log-on and runs until the task is disabled
   @{ Source = "ais"; AtLogOn = $true }
 )
