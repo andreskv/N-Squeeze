@@ -52,6 +52,7 @@ paper/
 site/
 scripts/
 notebooks/
+PREREGISTRATION.md
 Makefile
 .editorconfig
 .pre-commit-config.yaml

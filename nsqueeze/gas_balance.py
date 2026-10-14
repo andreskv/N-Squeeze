@@ -384,6 +384,31 @@ def power_generation(entsoe: pd.DataFrame) -> pd.DataFrame:
     ).rename_axis("observed_at")
 
 
+# EU countries with ENTSO-E gas-fired generation from January 2015 (ENTSO-E codes).
+# BG starts 2017, HR 2019, SE Dec 2021, CY Oct 2025, MT has no data. Fixed for G2-b.
+POWER_PANEL = tuple(sorted(EU27_ENTSOG - {"BG", "HR", "SE", "CY", "MT"}))
+
+
+def power_panel(
+    entsoe: pd.DataFrame, panel: tuple[str, ...] = POWER_PANEL, max_gap_days: int = 7
+) -> pd.Series:
+    """Gas-fired electricity of a fixed set of countries, TWh_e per gas day.
+
+    A country's missing days are filled by linear interpolation when the gap is at most
+    ``max_gap_days`` long. A day with a longer gap in any panel country is NaN.
+    """
+    e = entsoe[entsoe.series_id.str.split(".").str[1].isin(panel)]
+    by_geo = pd.concat(
+        {g: power_generation(e[e.series_id.str.split(".").str[1] == g]).power_twh_e for g in panel},
+        axis=1,
+    )
+    by_geo = by_geo.reindex(pd.date_range(by_geo.index.min(), by_geo.index.max()))
+    gap = by_geo.isna()
+    run_len = gap.apply(lambda s: s.groupby((s != s.shift()).cumsum()).transform("sum"))
+    filled = by_geo.interpolate(limit_area="inside").where(~gap | (run_len <= max_gap_days))
+    return filled.sum(axis=1).where(filled.notna().all(axis=1)).rename("power_twh_e")
+
+
 def layer1_frame(
     storage: pd.DataFrame, supply: pd.DataFrame, hdd: pd.Series, power: pd.Series | None = None
 ) -> pd.DataFrame:
@@ -418,7 +443,7 @@ def layer1_inputs(store, as_of=None, *, power: bool = False) -> pd.DataFrame:
     hdd = daily_hdd(
         store.read("weather", as_of=as_of), store.read("eurostat_population", as_of=as_of)
     )
-    pw = power_generation(store.read("entsoe", as_of=as_of)).power_twh_e if power else None
+    pw = power_panel(store.read("entsoe", as_of=as_of)) if power else None
     return layer1_frame(eu_storage(store.read("agsi", as_of=as_of)), supply, hdd, pw)
 
 
@@ -487,9 +512,11 @@ class BalanceModel:
             extra = np.asarray(power_burn if power_burn is not None else np.zeros(len(idx)), float)
         return _design(idx, np.asarray(hdd, float), self._post(idx), extra) @ self.coef_
 
-    def path(self, start_storage_twh: float, index: pd.DatetimeIndex, supply, hdd) -> pd.Series:
-        """Storage at the end of each day, given supply and HDD paths (no residual)."""
-        flow = np.asarray(supply, float) - self.demand(index, hdd)
+    def path(
+        self, start_storage_twh: float, index: pd.DatetimeIndex, supply, hdd, power_burn=None
+    ) -> pd.Series:
+        """Storage at the end of each day, given supply, HDD [and power] paths (no residual)."""
+        flow = np.asarray(supply, float) - self.demand(index, hdd, power_burn)
         return pd.Series(start_storage_twh + np.cumsum(flow), index=index, name="storage")
 
     def simulate(
@@ -581,13 +608,15 @@ def backcast(
     start_md: tuple[int, int],
     end_md: tuple[int, int],
     break_date: dt.date = dt.date(2022, 3, 1),
+    power: bool = False,
 ) -> pd.DataFrame:
-    """Back-cast end-of-winter storage with realised supply and weather.
+    """Back-cast end-of-winter storage with realised supply and weather [and power burn].
 
     ``frame`` columns: storage (TWh, end of gas day), wgv (TWh), supply (TWh/d), hdd.
     For each winter the model is fitted on every other day in ``frame`` (the winter
     itself is excluded), then the storage path is rebuilt from the observed start.
-    Errors are in percentage points of working-gas volume.
+    A winter with a missing day is left out (missing). Errors are in percentage points
+    of working-gas volume. ``power=True`` adds the ``power_burn`` column (G2-b).
     """
     f = frame.copy()
     f["dS"] = f.storage.diff()
@@ -596,10 +625,13 @@ def backcast(
         a, b = winter_window(w, start_md, end_md)
         if a not in f.index or b not in f.index:
             continue
-        train = f[(f.index <= a) | (f.index > b)]
-        m = BalanceModel(break_date=break_date).fit(train)
         test = f.loc[a + pd.Timedelta(days=1) : b]
-        pred = m.path(f.storage.loc[a], pd.DatetimeIndex(test.index), test.supply, test.hdd)
+        if len(test) != (b - a).days:
+            continue
+        train = f[(f.index <= a) | (f.index > b)]
+        m = BalanceModel(break_date=break_date, use_power_burn=power).fit(train)
+        pw = test.power_burn if power else None
+        pred = m.path(f.storage.loc[a], pd.DatetimeIndex(test.index), test.supply, test.hdd, pw)
         wgv = f.wgv.loc[b]
         rows.append(
             {

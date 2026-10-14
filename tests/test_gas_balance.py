@@ -93,6 +93,42 @@ def test_backcast_and_g2_gate():
     assert not gb.g2_gate(bc, mae_limit_pp=0.0, max_limit_pp=0.0).passed
 
 
+def test_backcast_with_power_burn_and_missing_day():
+    # Demand gets a power term that varies by winter; only the power-aware model tracks it.
+    f = _synthetic()
+    rng = np.random.default_rng(1)
+    winter_level = pd.Series(rng.uniform(0, 4, len(f.index.year.unique())), f.index.year.unique())
+    f["power_burn"] = winter_level.reindex(f.index.year).to_numpy() * (f.hdd > 10)
+    f["storage"] = f.storage - (0.8 * f.power_burn).cumsum()
+    winters = list(range(2016, 2025))
+    plain = gb.backcast(f, winters, start_md=(10, 1), end_md=(4, 1))
+    with_pw = gb.backcast(f, winters, start_md=(10, 1), end_md=(4, 1), power=True)
+    assert with_pw.error_pp.abs().mean() < plain.error_pp.abs().mean() / 3
+    gap = f.drop(pd.Timestamp("2019-01-10"))
+    assert 2019 not in set(gb.backcast(gap, winters, start_md=(10, 1), end_md=(4, 1)).winter)
+
+
+def test_power_panel_fills_short_gaps_only():
+    def rows(geo, days):
+        return pd.DataFrame(
+            {
+                "series_id": f"ENTSOE.{geo}.B04",
+                "observed_at": pd.DatetimeIndex(days) + pd.Timedelta(hours=10),
+                "value": 1000.0,  # MW for one hour -> 1 GWh
+                "meta": '{"resolution": "PT60M"}',
+            }
+        )
+
+    days = pd.date_range("2020-01-01", "2020-01-20")
+    a = rows("AA", days)
+    b = rows("BB", days.delete([2, 3]))  # 2-day gap: filled
+    b = b[~b.observed_at.dt.day.between(10, 17)]  # 8-day gap: not filled
+    p = gb.power_panel(pd.concat([a, b]), panel=("AA", "BB"), max_gap_days=7)
+    assert p.loc["2020-01-03"] == pytest.approx(2e-3)
+    assert p.loc["2020-01-10":"2020-01-17"].isna().all()
+    assert p.loc["2020-01-18"] == pytest.approx(2e-3)
+
+
 def test_fan_chart_ranks_weather_years():
     f = _synthetic()
     f["dS"] = f.storage.diff()
