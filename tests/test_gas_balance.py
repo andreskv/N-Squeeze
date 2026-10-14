@@ -25,6 +25,36 @@ def test_weighting_hdd_not_temperatures():
     assert gb.population_weighted(gb.heating_degree_days(t), w).iloc[0] == 4.0
 
 
+def test_population_weighted_reference():
+    # AT: a cold small region (500 HDD, 1 person) and a mild big one (100 HDD, 3 people).
+    # Population weighting gives 200; area weighting would not. A month with a missing
+    # region is NaN, not the mean of the rest. EU needs all 27 countries.
+    m = pd.to_datetime(["2020-01-01", "2020-02-01"])
+    hdd = pd.DataFrame(
+        {
+            "series_id": [
+                "ESTAT.HDD2.AT11",
+                "ESTAT.HDD2.AT12",
+                "ESTAT.HDD2.AT11",
+                "ESTAT.HDD2.NO01",
+            ],
+            "observed_at": [m[0], m[0], m[1], m[0]],
+            "value": [500.0, 100.0, 400.0, 900.0],
+        }
+    )
+    pop = pd.DataFrame(
+        {
+            "series_id": ["ESTAT.POP2.AT11", "ESTAT.POP2.AT12"],
+            "observed_at": pd.to_datetime(["2020-01-01"] * 2),
+            "value": [1.0, 3.0],
+        }
+    )
+    ref = gb.population_weighted_reference(hdd, pop)
+    assert list(ref.columns) == ["AT", "EU27_2020"]  # NO is not EU-27
+    assert ref.loc[m[0], "AT"] == 200.0
+    assert np.isnan(ref.loc[m[1], "AT"]) and ref.EU27_2020.isna().all()
+
+
 def _synthetic(start="2015-10-01", end="2025-04-30", seed=0):
     rng = np.random.default_rng(seed)
     idx = pd.date_range(start, end, freq="D")

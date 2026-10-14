@@ -13,7 +13,9 @@ from nsqueeze.io.sources.eurostat import (
     Comext,
     EurostatGasTrade,
     EurostatHDD,
+    EurostatHDDNuts2,
     EurostatPopulation,
+    EurostatPopulationNuts2,
 )
 from nsqueeze.io.sources.gie import AGSI, ALSI
 from nsqueeze.io.sources.openmeteo import OpenMeteoWeather
@@ -39,6 +41,8 @@ REGISTRY: dict[str, type[Source]] = {
         Comext,
         EurostatPopulation,
         EurostatHDD,
+        EurostatHDDNuts2,
+        EurostatPopulationNuts2,
         EurostatGasTrade,
         OpenMeteoWeather,
         PortWatch,

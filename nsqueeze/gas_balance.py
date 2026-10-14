@@ -82,6 +82,34 @@ def hdd_check(daily_hdd: pd.DataFrame, eurostat_monthly: pd.DataFrame) -> pd.Dat
     return pd.DataFrame(rows).set_index("geo")
 
 
+def population_weighted_reference(hdd_nuts2: pd.DataFrame, pop_nuts2: pd.DataFrame) -> pd.DataFrame:
+    """Monthly HDD per EU-27 country and ``EU27_2020``, NUTS-2 regions weighted by population.
+
+    Eurostat's own country and EU HDD weight regions by area. Area weighting measures the
+    cold of the land, not the cold where people heat buildings. A month is NaN for a
+    country if one of its regions has no HDD or no population for that year.
+    """
+    from nsqueeze.io.sources.eurostat import EU27_GEO
+
+    h = hdd_nuts2.assign(geo=hdd_nuts2.series_id.str.split(".").str[2])
+    h = h[h.geo.str[:2].isin(EU27_GEO)].pivot_table(
+        index="observed_at", columns="geo", values="value"
+    )
+    p = pop_nuts2.assign(
+        geo=pop_nuts2.series_id.str.split(".").str[2], year=pop_nuts2.observed_at.dt.year
+    )
+    p = p.pivot_table(index="year", columns="geo", values="value").reindex(columns=h.columns)
+    w = p.reindex(h.index.year).set_axis(h.index)
+    country = h.columns.str[:2]
+    num = (h * w).T.groupby(country).sum().T
+    den = w.T.groupby(country).sum().T
+    complete = (h.notna() & w.notna()).T.groupby(country).all().T
+    out = (num / den).where(complete)
+    eu = num.sum(axis=1) / den.sum(axis=1)
+    out["EU27_2020"] = eu.where(complete.all(axis=1) & (complete.shape[1] == len(EU27_GEO)))
+    return out
+
+
 # Supply from ENTSOG
 
 EU27_ENTSOG = frozenset(

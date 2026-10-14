@@ -139,7 +139,7 @@ class _EurostatStats(Source):
             STATS_URL + self.dataset,
             params={
                 **self.fixed,
-                "geo": [*EU27_GEO, "EU27_2020"],
+                **self.geo_params(),
                 "sinceTimePeriod": self.since(start),
             },
         )
@@ -162,6 +162,16 @@ class _EurostatStats(Source):
     def since(self, start: dt.date) -> str:
         return f"{start:%Y-%m}"
 
+    def geo_params(self) -> dict:
+        return {"geo": [*EU27_GEO, "EU27_2020"]}
+
+
+class _Nuts2(_EurostatStats):
+    """All NUTS-2 regions. The first two letters of a region code give its country."""
+
+    def geo_params(self) -> dict:
+        return {"geoLevel": "nuts2"}
+
 
 class EurostatPopulation(_EurostatStats):
     name = "eurostat_population"
@@ -180,6 +190,27 @@ class EurostatHDD(_EurostatStats):
     fixed: ClassVar[dict[str, str]] = {"indic_nrg": "HDD", "unit": "NR"}
     prefix = "ESTAT.HDD"
     unit = "degree-days"
+
+
+class EurostatHDDNuts2(_Nuts2):
+    # Eurostat's country HDD is the area-weighted mean of these regions. Weighted by
+    # population instead, they give the reference for a population-weighted HDD.
+    name = "eurostat_hdd_nuts2"
+    dataset = "nrg_chddr2_m"
+    fixed: ClassVar[dict[str, str]] = {"indic_nrg": "HDD", "unit": "NR"}
+    prefix = "ESTAT.HDD2"
+    unit = "degree-days"
+
+
+class EurostatPopulationNuts2(_Nuts2):
+    name = "eurostat_population_nuts2"
+    dataset = "demo_r_d2jan"
+    fixed: ClassVar[dict[str, str]] = {"sex": "T", "age": "TOTAL", "unit": "NR"}
+    prefix = "ESTAT.POP2"
+    unit = "persons"
+
+    def since(self, start: dt.date) -> str:
+        return f"{start:%Y}"
 
 
 class EurostatGasTrade(Source):

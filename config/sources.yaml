@@ -208,6 +208,28 @@ eurostat_hdd:
   verified: true   # parsed 2026-10-12
   phase: 2
 
+eurostat_hdd_nuts2:
+  name: Eurostat heating degree days by NUTS-2 region, monthly (nrg_chddr2_m; JRC data)
+  layer: L1
+  frequency: monthly
+  auth: none
+  grade: A
+  role: population-weighted reference for the daily HDD (Eurostat's country HDD is area-weighted)
+  recoverable: true
+  verified: true   # parsed 2026-10-14
+  phase: 2
+
+eurostat_population_nuts2:
+  name: Eurostat population on 1 January by NUTS-2 region (demo_r_d2jan)
+  layer: L1
+  frequency: annual
+  auth: none
+  grade: A
+  role: weights for the NUTS-2 HDD reference
+  recoverable: true
+  verified: true   # parsed 2026-10-14
+  phase: 2
+
 eurostat_gas_trade:
   name: Eurostat EU-27 gas imports and exports by partner, monthly (nrg_ti_gasm, nrg_te_gasm)
   layer: L1
