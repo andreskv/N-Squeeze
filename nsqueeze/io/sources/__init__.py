@@ -8,6 +8,7 @@ from nsqueeze.io.sources.eex import EUAAuctions
 from nsqueeze.io.sources.eia import HenryHub
 from nsqueeze.io.sources.entsoe import ENTSOEGasGeneration
 from nsqueeze.io.sources.entsog import ENTSOGFlows
+from nsqueeze.io.sources.ets import ETSVerifiedEmissions
 from nsqueeze.io.sources.eurostat import (
     Comext,
     EurostatGasTrade,
@@ -43,7 +44,7 @@ REGISTRY: dict[str, type[Source]] = {
         PortWatch,
         _stub("ttf_daily_candidate", 0),
         _stub("wto_hormuz", 0),
-        _stub("ets_registry", 1),
+        ETSVerifiedEmissions,
     )
 }
 

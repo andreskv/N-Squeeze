@@ -46,3 +46,30 @@ def test_pause_flag_stops_before_next_chunk():
     j.pause_flag.touch()
     assert j.run(store=object(), source=_FakeSource()) == "paused"
     assert not any(jobs.Job.load("p").done)
+
+
+def test_transient_error_is_retried_not_fatal(monkeypatch):
+    import httpx
+
+    monkeypatch.setattr(jobs.time, "sleep", lambda s: None)
+
+    class Flaky(_FakeSource):
+        def __init__(self):
+            super().__init__()
+            self.timeouts = 1
+
+        def archive(self, store, a, b):
+            if self.timeouts:
+                self.timeouts -= 1
+                raise httpx.ReadTimeout("The read operation timed out")
+            return super().archive(store, a, b)
+
+    j = jobs.Job.new("r", "entsog", dt.date(2020, 1, 1), dt.date(2020, 2, 29))
+    assert j.run(store=object(), source=Flaky()) == "done"
+    # A non-network error still stops the job at once (see the 429-as-RuntimeError case above).
+    assert (
+        jobs.Job.new("r2", "entsog", dt.date(2020, 1, 1), dt.date(2020, 1, 31)).run(
+            store=object(), source=_FakeSource(fail_on=dt.date(2020, 1, 1))
+        )
+        == "failed"
+    )

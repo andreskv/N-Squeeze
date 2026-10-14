@@ -182,3 +182,52 @@ def test_entsog_archive_rows(tmp_path):
         "ENTSOG.NAME.OPEIC.Unknown.exit": 3.0,
     }  # the two conflicting "Twice" rows are dropped
     assert set(df.observed_at) == {"2016-03-01"}
+
+
+def test_ets_verified_emissions_parse():
+    import io
+
+    import pandas as pd
+
+    from nsqueeze.io.sources import ets
+
+    head = [
+        "REGISTRY_CODE",
+        "IDENTIFIER_IN_REG",
+        "INSTALLATION_NAME",
+        "INSTALLATION_IDENTIFIER",
+        "PERMIT_IDENTIFIER",
+        "MAIN_ACTIVITY_TYPE_CODE",
+        "ALLOCATION_2025",
+        "VERIFIED_EMISSIONS_2025",
+        "VERIFIED_EMISSIONS_2024",
+        "ACCOUNT_TYPE",
+    ]
+    rows = [
+        ["AT", "x", "Ammoniakanlage", 205363, "P1", 41, 0, 700000, "Excluded",
+         "OPERATOR HOLDING ACCOUNT"],
+        ["DE", "y", "Kraftwerk", 7, "P2", 20, 0, None, 1200, "OPERATOR HOLDING ACCOUNT"],
+        ["FR", "z", "Airline", 9, "", 10, 0, 50, 60, "AIRCRAFT OPERATOR HOLDING ACCOUNT"],
+    ]  # fmt: skip
+    buf = io.BytesIO()
+    with pd.ExcelWriter(buf) as w:
+        pd.DataFrame([["Date of Extraction", pd.Timestamp("2026-04-01")]]).to_excel(
+            w, sheet_name="Read Me", header=False, index=False
+        )
+        pd.DataFrame([["Please see Read Me"], [None], head, *rows]).to_excel(
+            w, sheet_name="data", header=False, index=False
+        )
+    df = ets.to_canonical(buf.getvalue())
+    got = {(s, d.year): v for s, d, v in zip(df.series_id, df.observed_at, df.value, strict=True)}
+    assert got == {("ETS.AT.205363", 2025): 700000, ("ETS.DE.7", 2024): 1200}  # no aircraft
+    assert json.loads(df.meta[0]) == {
+        "name": "Ammoniakanlage", "activity": 41, "permit": "P1", "extracted": "2026-04-01"
+    }  # fmt: skip
+    html = (
+        '<a href="/document/download/a_en?filename=verified_emissions_2024_en.xlsx">'
+        '<a href="/document/download/b_en?filename=verified_emissions_2025_en.xlsx">'
+    )
+    assert ets.latest_link(html) == (
+        "/document/download/b_en?filename=verified_emissions_2025_en.xlsx",
+        2025,
+    )

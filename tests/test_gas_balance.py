@@ -273,3 +273,58 @@ def test_archive_points_rename_and_bucket():
     s = gb.supply_from_entsog(out, cls)
     assert s.loc[day, "other_pipe"] == pytest.approx(3.0)
     assert s.loc[day, "norway"] == pytest.approx(2.0)
+
+
+def test_layer1_inputs():
+    d1, d2 = pd.Timestamp("2025-01-15"), pd.Timestamp("2025-01-16")
+    agsi = pd.DataFrame(
+        {
+            "series_id": ["AGSI.EU.gasInStorage", "AGSI.EU.workingGasVolume", "AGSI.DE.full"],
+            "observed_at": [d1] * 3,
+            "value": ["800.5", "1100", "70"],  # GIE values arrive as strings
+        }
+    )
+    st = gb.eu_storage(agsi)
+    assert (st.loc[d1, "storage"], st.loc[d1, "wgv"]) == (800.5, 1100.0)
+
+    # HDD: A at Tm 10 °C (HDD 8), B at Tm 20 °C (HDD 0); weights 1 and 3 -> 2.0.
+    # 2026 has no population row: the 2025 weights carry forward.
+    days = [d1, pd.Timestamp("2026-01-15")]
+    temps = [("AA", "max", 12), ("AA", "min", 8), ("BB", "max", 22), ("BB", "min", 18)]
+    weather = pd.DataFrame(
+        [(f"OM.{g}.temperature_2m_{v}", d, t) for d in days for g, v, t in temps],
+        columns=["series_id", "observed_at", "value"],
+    )
+    pop = pd.DataFrame(
+        {
+            "series_id": ["ESTAT.POP.AA", "ESTAT.POP.BB", "ESTAT.POP.EU27_2020"],
+            "observed_at": pd.Timestamp("2025-01-01"),
+            "value": [1.0, 3.0, 4.0],
+        }
+    )
+    h = gb.daily_hdd(weather, pop)
+    assert list(h) == pytest.approx([2.0, 2.0])
+    gap = gb.daily_hdd(weather[~((weather.series_id == "OM.BB.temperature_2m_max")
+                                 & (weather.observed_at == d1))], pop)  # fmt: skip
+    assert np.isnan(gap.loc[d1])
+
+    # Power: 06:00 Brussels (05:00 UTC in winter) starts the gas day.
+    entsoe = pd.DataFrame(
+        {
+            "series_id": ["ENTSOE.DE.B04"] * 3 + ["ENTSOE.FR.B04"],
+            "observed_at": pd.to_datetime(
+                ["2025-01-15 04:45", "2025-01-15 05:00", "2025-01-15 05:15", "2025-01-15 05:00"]
+            ),
+            "value": [400.0, 400.0, 400.0, 1000.0],
+            "meta": ['{"resolution": "PT15M"}'] * 3 + ['{"resolution": "PT60M"}'],
+        }
+    )
+    pw = gb.power_generation(entsoe)
+    assert pw.loc[pd.Timestamp("2025-01-14"), "power_twh_e"] == pytest.approx(100 / 1e6)
+    assert pw.loc[d1, "power_twh_e"] == pytest.approx((200 + 1000) / 1e6)
+    assert pw.loc[d1, "countries"] == 2
+
+    supply = pd.DataFrame({"norway": [1.0, 1.0], "lng": [0.5, 0.5]}, index=[d1, d2])
+    f = gb.layer1_frame(st, supply, h, pw.power_twh_e)
+    assert list(f.index) == [d1]  # only days present in every input
+    assert f.loc[d1, "supply"] == 1.5

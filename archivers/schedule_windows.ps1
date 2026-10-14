@@ -7,18 +7,25 @@
   Every task is registered DISABLED. Start and stop them with archivers\tasks.ps1.
   Remove them with:  Get-ScheduledTask -TaskName "N-Squeeze*" | Unregister-ScheduledTask -Confirm:$false
   Keys are read from .env by run_archiver.ps1 at run time; nothing secret is stored in the task.
+  -Unattended (always-on machine, run as administrator): tasks run whether or not the user
+  is logged on (S4U logon, no stored password), and the AIS stream starts at boot.
 
 .EXAMPLE
   powershell -ExecutionPolicy Bypass -File archivers\schedule_windows.ps1 -WhatIf
+  powershell -ExecutionPolicy Bypass -File archivers\schedule_windows.ps1 -Unattended
 #>
 [CmdletBinding(SupportsShouldProcess)]
-param([string]$Repo)
+param([string]$Repo, [switch]$Unattended)
 # Not a param default: Windows PowerShell 5.1 can leave $PSScriptRoot empty there,
 # which pointed every task at C:\archivers.
 if (-not $Repo) { $Repo = Split-Path -Parent $PSScriptRoot }
 if (-not (Test-Path (Join-Path $Repo "archivers\run_archiver.ps1"))) { throw "Repo not found: $Repo" }
 
 $runner = Join-Path $Repo "archivers\run_archiver.ps1"
+$logon = if ($Unattended) { "S4U" } else { "Interactive" }
+# The token's own name: $env:USERDOMAIN can be wrong in an SSH session
+$me = [Security.Principal.WindowsIdentity]::GetCurrent().Name
+$principal = New-ScheduledTaskPrincipal -UserId $me -LogonType $logon
 $jobs = @(
   # GIE publishes once a day at 19:30
   @{ Source = "agsi";      At = "08:30" },
@@ -46,16 +53,17 @@ foreach ($j in $jobs) {
   $action = New-ScheduledTaskAction -Execute "powershell.exe" `
     -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$runner`" -Source $($j.Source) -Days $days" `
     -WorkingDirectory $Repo
-  $trigger = if ($j.AtLogOn) { New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME }
+  $trigger = if ($j.AtLogOn -and $Unattended) { New-ScheduledTaskTrigger -AtStartup }
+             elseif ($j.AtLogOn) { New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME }
              elseif ($j.Weekly) { New-ScheduledTaskTrigger -Weekly -DaysOfWeek Monday -At $j.At }
              else { New-ScheduledTaskTrigger -Daily -At $j.At }
   $settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries `
     -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 30)
   if ($j.AtLogOn) { $settings.ExecutionTimeLimit = "PT0S" }  # the stream has no time limit
-  $when = if ($j.AtLogOn) { "at log-on" } else { $j.At }
+  $when = if ($j.AtLogOn -and $Unattended) { "at boot" } elseif ($j.AtLogOn) { "at log-on" } else { $j.At }
   if ($PSCmdlet.ShouldProcess($name, "Register scheduled task ($when), disabled")) {
-    Register-ScheduledTask -TaskName $name -Action $action -Trigger $trigger -Settings $settings -Force | Out-Null
-    Disable-ScheduledTask -TaskName $name | Out-Null  # I enable each task by hand
+    Register-ScheduledTask -TaskName $name -Action $action -Trigger $trigger -Settings $settings -Principal $principal -Force -ErrorAction Stop | Out-Null
+    Disable-ScheduledTask -TaskName $name -ErrorAction Stop | Out-Null  # I enable each task by hand
     Write-Host "registered $name ($when, disabled)"
   }
 }

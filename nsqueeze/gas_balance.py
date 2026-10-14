@@ -17,6 +17,7 @@ actuals before any fan chart is published. The back-cast is leave-one-winter-out
 from __future__ import annotations
 
 import datetime as dt
+import json
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -291,6 +292,106 @@ def bucket_check(entsog_daily: pd.DataFrame, eurostat_monthly: pd.DataFrame, tol
             "median_err": float(err.median()),
         }
     return pd.DataFrame(rows).T, j
+
+
+# Layer 1 inputs (PIT rows -> one daily frame)
+
+EU_STORAGE = {"AGSI.EU.gasInStorage": "storage", "AGSI.EU.workingGasVolume": "wgv"}
+
+
+def eu_storage(agsi: pd.DataFrame) -> pd.DataFrame:
+    """EU gas in storage and working-gas volume, TWh per gas day, from ``agsi`` rows."""
+    a = agsi[agsi.series_id.isin(EU_STORAGE)]
+    w = a.assign(value=pd.to_numeric(a.value, errors="coerce")).pivot_table(
+        index="observed_at", columns="series_id", values="value", aggfunc="last"
+    )
+    return w.rename(columns=EU_STORAGE).reindex(columns=list(EU_STORAGE.values()))
+
+
+def daily_hdd(weather: pd.DataFrame, population: pd.DataFrame) -> pd.Series:
+    """Population-weighted EU HDD per day from ``weather`` and ``eurostat_population`` rows.
+
+    Country HDD first, then the weights (see ``population_weighted``). A day's weights
+    are the populations on 1 January of its year, or the latest earlier year. A day
+    with a missing country temperature is NaN, not a smaller average.
+    """
+    t = weather.pivot_table(index="observed_at", columns="series_id", values="value")
+    geos = sorted({c.split(".")[1] for c in t.columns})
+    tmax = t[[f"OM.{g}.temperature_2m_max" for g in geos]].set_axis(geos, axis=1)
+    tmin = t[[f"OM.{g}.temperature_2m_min" for g in geos]].set_axis(geos, axis=1)
+    hdd = heating_degree_days(eurostat_mean_temp(tmax, tmin))
+    pop = population[population.series_id.str.match(r"ESTAT\.POP\.[A-Z]{2}$")]
+    p = pop.assign(geo=pop.series_id.str[-2:], year=pop.observed_at.dt.year)
+    p = p.pivot_table(index="year", columns="geo", values="value").reindex(columns=geos)
+    years = range(min(p.index.min(), hdd.index.year.min()), hdd.index.year.max() + 1)
+    w = p.reindex(years).ffill().reindex(hdd.index.year).set_axis(hdd.index)
+    out = (hdd * w).sum(axis=1, min_count=1) / w.sum(axis=1)
+    return out.where(hdd.notna().all(axis=1)).rename("hdd")
+
+
+def power_generation(entsoe: pd.DataFrame) -> pd.DataFrame:
+    """Gas-fired electricity per gas day, TWh_e, from ``entsoe`` rows (MW at native resolution).
+
+    The gas day runs 06:00-06:00 Brussels time. ``countries`` counts the countries
+    with data that day: coverage changes over time (see the ENTSO-E gaps), and the
+    caller decides which days to use. This is electricity, not gas: the fit turns it
+    into gas burn through its own coefficient, so no plant efficiency is assumed here.
+    """
+    res = entsoe.meta.map(
+        {m: pd.Timedelta(json.loads(m)["resolution"]) for m in entsoe.meta.unique()}
+    )
+    mwh = entsoe.value * (res / pd.Timedelta(hours=1))
+    local = pd.DatetimeIndex(entsoe.observed_at).tz_localize("UTC").tz_convert("Europe/Brussels")
+    day = (local - pd.Timedelta(hours=6)).tz_localize(None).normalize()
+    f = pd.DataFrame(
+        {
+            "day": day,
+            "geo": entsoe.series_id.str.split(".").str[1].to_numpy(),
+            "mwh": mwh.to_numpy(),
+        }
+    )
+    g = f.groupby("day")
+    return pd.DataFrame(
+        {"power_twh_e": units.mwh_to_twh(g.mwh.sum()), "countries": g.geo.nunique()}
+    ).rename_axis("observed_at")
+
+
+def layer1_frame(
+    storage: pd.DataFrame, supply: pd.DataFrame, hdd: pd.Series, power: pd.Series | None = None
+) -> pd.DataFrame:
+    """Daily frame for ``backcast``/``BalanceModel``: storage, wgv, supply, hdd[, power_burn].
+
+    ``supply`` is the bucket frame from ``supply_from_entsog``; its buckets are summed.
+    Only days present in every input are kept, nothing is filled.
+    """
+    parts = [storage[["storage", "wgv"]], supply.sum(axis=1).rename("supply"), hdd.rename("hdd")]
+    if power is not None:
+        parts.append(power.rename("power_burn"))
+    return pd.concat(parts, axis=1, join="inner").dropna().sort_index()
+
+
+def layer1_inputs(store, as_of=None, *, power: bool = False) -> pd.DataFrame:
+    """Read every Layer 1 input from the PIT store (as known at ``as_of``) into one frame.
+
+    Supply uses the boundary classes plus ``config/entsog_landing_points.csv`` and
+    ``config/entsog_archive_points.csv``, as in the OI-26 checks.
+    """
+    from nsqueeze.config import config_dir
+
+    cfg = config_dir()
+    flows, extra = archive_points(
+        store.read("entsog", as_of=as_of), pd.read_csv(cfg / "entsog_archive_points.csv", dtype=str)
+    )
+    classes = landing_points(
+        classify_points(pd.read_csv(cfg / "entsog_interconnections.csv")),
+        pd.read_csv(cfg / "entsog_landing_points.csv"),
+    )
+    supply = supply_from_entsog(flows, pd.concat([classes, extra], ignore_index=True))
+    hdd = daily_hdd(
+        store.read("weather", as_of=as_of), store.read("eurostat_population", as_of=as_of)
+    )
+    pw = power_generation(store.read("entsoe", as_of=as_of)).power_twh_e if power else None
+    return layer1_frame(eu_storage(store.read("agsi", as_of=as_of)), supply, hdd, pw)
 
 
 # Model

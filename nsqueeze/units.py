@@ -22,6 +22,7 @@ GJ_PER_TJ = 1_000.0
 KWH_PER_TWH = 1e9
 TJ_PER_TWH = 3600.0
 GWH_PER_TWH = 1e3
+MWH_PER_TWH = 1e6
 
 # Molar masses, g/mol
 M_N = 14.007
@@ -57,6 +58,11 @@ def kwh_to_twh(x: Num) -> Num:
 def tj_to_twh(x: Num) -> Num:
     """Eurostat gas trade (TJ, GCV) → TWh. 1 TWh = 3.6 PJ by definition."""
     return x / TJ_PER_TWH
+
+
+def mwh_to_twh(x: Num) -> Num:
+    """ENTSO-E generation (MW × hours = MWh) → TWh."""
+    return x / MWH_PER_TWH
 
 
 def gwh_to_twh(x: Num) -> Num:

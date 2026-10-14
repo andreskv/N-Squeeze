@@ -133,12 +133,14 @@ comext:
   phase: 1
 
 ets_registry:
-  name: EU ETS verified emissions per installation (EUTL / EEA viewer)
+  name: EU ETS verified emissions per stationary installation, 2008 onward (Commission Union Registry file verified_emissions_<year>_en.xlsx)
   layer: L2
-  frequency: annual
+  frequency: annual (published in April; the latest file holds all years)
   auth: none
+  grade: A
+  role: G1 test 4 (ETS-implied output vs capacity); main activity 41 = ammonia, 38 = nitric acid
   recoverable: true
-  verified: false
+  verified: true   # 2025 file parsed 2026-10-14; 13,414 installations, tCO2e
   phase: 1
 
 gem_plants:

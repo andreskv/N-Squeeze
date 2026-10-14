@@ -15,10 +15,38 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import time
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
+import httpx
+
 from nsqueeze.config import data_dir
+
+# Waits (seconds) before retrying a chunk after a transient network error. An
+# unattended back-fill should not stop for one slow or dropped request.
+RETRY_WAITS = (60, 300, 900)
+
+
+def _transient(e: Exception) -> bool:
+    if isinstance(e, httpx.TimeoutException | httpx.TransportError):
+        return True
+    return isinstance(e, httpx.HTTPStatusError) and (
+        e.response.status_code == 429 or e.response.status_code >= 500
+    )
+
+
+def _archive_with_retry(src, store, a: dt.date, b: dt.date, log) -> int:
+    for wait in (*RETRY_WAITS, None):
+        try:
+            return src.archive(store, a, b)
+        except Exception as e:
+            if wait is None or not _transient(e):
+                raise
+            log(f"chunk {a}..{b}: {type(e).__name__}, retry in {wait} s")
+            time.sleep(wait)
+    raise AssertionError("unreachable")
+
 
 # Chunk length per source, in days. One chunk = one API window = one PIT vintage.
 CHUNK_DAYS = {
@@ -123,7 +151,9 @@ class Job:
                     self.status = "paused"
                     self.log(f"paused before chunk {a}..{b}; {self.progress}")
                     return self._finish()
-                n = src.archive(store, dt.date.fromisoformat(a), dt.date.fromisoformat(b))
+                n = _archive_with_retry(
+                    src, store, dt.date.fromisoformat(a), dt.date.fromisoformat(b), self.log
+                )
                 self.done[i], self.rows = True, self.rows + n
                 self.save()
                 self.log(f"chunk {a}..{b}: {n} rows; {self.progress}")

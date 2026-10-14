@@ -185,6 +185,16 @@ validation:
     unit: share of months
     grade: C
     basis: Pre-set 13 Oct 2026 - a bucket passes if at least this share of months 2016-2025 is within supply_bucket_tolerance
+  g2_mae_limit_pp:
+    value: 5
+    unit: percentage points of working-gas volume
+    grade: C
+    basis: Pre-set 14 Oct 2026, before any fit on AGSI+ data - G2 back-cast of EU storage on 1 April, winters ending 2016-2025, mean absolute error limit
+  g2_max_limit_pp:
+    value: 10
+    unit: percentage points of working-gas volume
+    grade: C
+    basis: Pre-set 14 Oct 2026, before any fit on AGSI+ data - G2 back-cast, no single winter may miss by more than this
   onset_window_weeks:
     value: 4
     unit: weeks
