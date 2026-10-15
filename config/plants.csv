@@ -1,1 +1,31 @@
 plant_id,name,operator,country,lat,lon,capacity_kt_nh3,energy_gj_lhv_per_t,energy_evidence,integrated_downstream,ets_scope,ets_installation_id,gem_id,source,notes
+AT-LINZ,Linz,LAT Nitrogen Linz,AT,,,,,,,41,ETS.AT.205363,,EU Union Registry verified emissions; EEA EUTL (May 2025) for operator and city,
+BE-TERTRE,Tertre,Yara,BE,,,,,,,name,ETS.BE.58,,EU Union Registry; installation name or company sources state ammonia production,yes until 2024: 400 kt/yr NH3; Yara announced the closure of the ammonia plant in Oct 2024 (nitrates continue on bought-in ammonia). ETS unit also holds nitric acid
+BE-ANTWER,Antwerp,BASF,BE,,,,,,,site,ETS.BE.203830;ETS.BE.215200,,EU Union Registry; ammonia inside a larger installation,yes: BASF Aug 2025 release says it still makes ammonia in Antwerp. ETS ID changed: BE.203830 to 2020; BE.215200 from 2021; whole integrated site (~3 Mt/yr); not ammonia only
+BG-DIMITR,Dimitrovgrad,Neochim,BG,,,,,,,41,ETS.BG.130,,EU Union Registry verified emissions; EEA EUTL (May 2025) for operator and city,
+CZ-LITVIN,Litvinov,Orlen Unipetrol,CZ,,,,,,,site,ETS.CZ.92,,EU Union Registry; ammonia inside a larger installation,
+DE-BRUNSB,Brunsbuettel,Yara,DE,,,,,,,name,ETS.DE.205626,,EU Union Registry; installation name or company sources state ammonia production,
+DE-KOELN,Koeln,INEOS,DE,,,,,,,41,ETS.DE.205274,,EU Union Registry verified emissions; EEA EUTL (May 2025) for operator and city,
+DE-LUDWIG,Ludwigshafen,BASF,DE,,,,,,,41,ETS.DE.201960;ETS.DE.201962,,EU Union Registry verified emissions; EEA EUTL (May 2025) for operator and city,
+DE-PIESTE,Piesteritz,SKW Piesteritz,DE,,,,,,,41,ETS.DE.202455;ETS.DE.202457,,EU Union Registry verified emissions; EEA EUTL (May 2025) for operator and city,
+ES-PALOS,Palos,Fertiberia,ES,,,,,,,41,ETS.ES.201855,,EU Union Registry verified emissions; EEA EUTL (May 2025) for operator and city,
+ES-PUERTO,Puertollano,Fertiberia,ES,,,,,,,name,ETS.ES.201856,,EU Union Registry; installation name or company sources state ammonia production,yes: 200 kt/yr NH3 (Fertiberia); hybrid with ~17 kt/yr green NH3 since 2022. ETS unit also holds nitric acid
+FR-LEHAVR,Le Havre,Yara,FR,,,,,,,name,ETS.FR.257,,EU Union Registry; installation name or company sources state ammonia production,yes: ~400 kt/yr NH3 plus urea (Yara); curtailed Mar 2022
+FR-GRANDQ,Grand-Quevilly,LAT Nitrogen,FR,,,,,,,name,ETS.FR.204207;ETS.FR.294,,EU Union Registry; installation name or company sources state ammonia production,
+FR-GRANDP,Grandpuits,LAT Nitrogen,FR,,,,,,,41,ETS.FR.204211,,EU Union Registry verified emissions; EEA EUTL (May 2025) for operator and city,
+FR-OTTMAR,Ottmarsheim,Borealis,FR,,,,,,,41,ETS.FR.206232,,EU Union Registry verified emissions; EEA EUTL (May 2025) for operator and city,
+GR-KAVALA,Kavala,Kavala Novafert,GR,,,,,,,41,ETS.GR.207882,,EU Union Registry verified emissions; EEA EUTL (May 2025) for operator and city,
+HR-KUTINA,Kutina,Petrokemija,HR,,,,,,,41,ETS.HR.204107,,EU Union Registry verified emissions; EEA EUTL (May 2025) for operator and city,
+HU-PETFUE,Petfuerdo,Nitrogenmuvek,HU,,,,,,,41,ETS.HU.153,,EU Union Registry verified emissions; EEA EUTL (May 2025) for operator and city,
+IT-FERRAR,Ferrara,Yara,IT,,,,,,,name,ETS.IT.912,,EU Union Registry; installation name or company sources state ammonia production,
+LT-JONAVA,Jonava,Achema,LT,,,,,,,41,ETS.LT.18,,EU Union Registry verified emissions; EEA EUTL (May 2025) for operator and city,
+NL-GELEEN,Geleen,OCI (Chemelot site permit),NL,,,,,,,site,ETS.NL.107,,EU Union Registry; ammonia inside a larger installation,
+NL-SLUISK,Sluiskil,Yara,NL,,,,,,,41,ETS.NL.128;ETS.NL.204691;ETS.NL.204692;ETS.NL.204693;ETS.NL.204694;ETS.NL.204695,,EU Union Registry verified emissions; EEA EUTL (May 2025) for operator and city,
+PL-KEDZIE,Kedzierzyn,Grupa Azoty ZAK,PL,,,,,,,site,ETS.PL.203087,,EU Union Registry; ammonia inside a larger installation,
+PL-POLICE,Police,Grupa Azoty Police,PL,,,,,,,41,ETS.PL.202384,,EU Union Registry verified emissions; EEA EUTL (May 2025) for operator and city,
+PL-PULAWY,Pulawy,Grupa Azoty Pulawy,PL,,,,,,,site,ETS.PL.202510,,EU Union Registry; ammonia inside a larger installation,
+PL-TARNOW,Tarnow,Grupa Azoty,PL,,,,,,,site,ETS.PL.203112,,EU Union Registry; ammonia inside a larger installation,likely yes: Grupa Azoty S.A. 2024 report lists investments in its ammonia department (Wydzial Amoniaku). Capacity not found
+PL-WLOCLA,Wloclawek,Anwil,PL,,,,,,,41,ETS.PL.202697,,EU Union Registry verified emissions; EEA EUTL (May 2025) for operator and city,
+RO-TARGUM,Targu Mures,Azomures,RO,,,,,,,site,ETS.RO.50,,EU Union Registry; ammonia inside a larger installation,
+RO-SLOBOZ,Slobozia,Nitramonia,RO,,,,,,,name,ETS.RO.39,,EU Union Registry; installation name or company sources state ammonia production,ammonia site (former Amonil / Chemgas); idle since 2021; ETS near zero from 2021; zero from 2023
+SK-SALA,Sala,Duslo,SK,,,,,,,41,ETS.SK.44,,EU Union Registry verified emissions; EEA EUTL (May 2025) for operator and city,
