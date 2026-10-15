@@ -9,7 +9,7 @@ cbam_factor,EU,0.735,share,2032-01-01,2032-12-31,A,ETS Directive Art. 10a(1a),
 cbam_factor,EU,0.86,share,2033-01-01,2033-12-31,A,ETS Directive Art. 10a(1a),
 cbam_factor,EU,1.00,share,2034-01-01,,A,ETS Directive Art. 10a(1a),
 ets_benchmark,NH3,1.57,tCO2e/t,2021-01-01,2025-12-31,B,S&P Global Platts,
-ets_benchmark,NH3,1.522,tCO2e/t,2026-01-01,2030-12-31,B,IR (EU) 2026/1412 via CBAM Guide,OI-02 verify on EUR-Lex
+ets_benchmark,NH3,1.522,tCO2e/t,2026-01-01,2030-12-31,A,IR (EU) 2026/1412 Annex (benchmark value 2026-2030),
 ets_benchmark,HNO3,0.151,tCO2e/t,2026-01-01,2030-12-31,B,CBAM Guide,N2O-dominated
 cbam_price,EU,82.32,EUR/tCO2,2026-07-01,2026-09-30,B,CBAM Guide tracker,Q3 2026 quarterly average of EUA auctions; weekly from 2027
 duty_ad_valorem,MFN:2814,0.055,share,2000-01-01,,A,Commission statements,Normal MFN rate ammonia

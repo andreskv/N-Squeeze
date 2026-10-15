@@ -127,23 +127,25 @@ cbam:
   default_markup_fertilisers:
     value: 0.01
     unit: share
-    grade: B
-    source: CRU / BCInsight, Jan 2026
-    url: https://www.bcinsight.crugroup.com/2026/01/16/119787
-    open_item: OI-03
+    grade: A
+    source: IR (EU) 2025/2621 Annex I as corrected by IR (EU) 2026/1740 - 1 % for 2026 and onwards
+    url: https://eur-lex.europa.eu/eli/reg_impl/2026/1740/oj/eng
   benchmark_ammonia:
     value: 1.522
     unit: tCO2e/t_NH3
-    grade: C
-    basis: PLACEHOLDER — ETS benchmark used until the IR 2025/2620 Annex value is extracted
-    open_item: OI-01
-  default_embedded_emissions:   # tCO2e/t NH3, before mark-up
-    DZ: { value: 2.101, grade: B, name: Algeria }
-    RU: { value: 2.283, grade: B, name: Russia }
-    TT: { value: 2.444, grade: B, name: Trinidad and Tobago }
-    generic: { value: 2.68, grade: B, name: Generic ammonia default, source: CBAM Guide }
-    _source: CRU / BCInsight Jan 2026; confirm full table in IR 2025/2621
-    _open_item: OI-03
+    grade: A
+    source: IR (EU) 2025/2620 Annex point 5, Column B (default CBAM benchmark BMg), CN 2814 10 00
+    url: https://eur-lex.europa.eu/eli/reg_impl/2025/2620/oj/eng
+  default_embedded_emissions:   # tCO2e/t NH3, CN 2814 10 00, total emissions before mark-up
+    DZ: { value: 2.080, grade: A, name: Algeria }
+    EG: { value: 2.050, grade: A, name: Egypt }
+    RU: { value: 2.260, grade: A, name: Russian Federation }
+    SA: { value: 2.100, grade: A, name: Saudi Arabia }
+    TT: { value: 2.420, grade: A, name: Trinidad and Tobago }
+    US: { value: 3.410, grade: A, name: United States }
+    generic: { value: 3.130, grade: A, name: Other countries and territories }
+    _source: IR (EU) 2025/2621 Annex I as corrected by IR (EU) 2026/1740, column 'total emissions'
+    _url: https://eur-lex.europa.eu/eli/reg_impl/2026/1740/oj/eng
 
 fitted:
   # Calibrated jointly on pre-2026 curtailment episodes (config/episodes.csv), then FROZEN.

@@ -38,8 +38,10 @@ def test_series_lookup(pol):
 def test_parameter_registry():
     P = ParameterSet.load()
     assert P.value("ammonia_tech.energy_eu_average") == 35.7
-    assert P["cbam.default_embedded_emissions.TT"].open_item == "OI-03"  # inherited
-    assert P["cbam.benchmark_ammonia"].grade is Grade.C
+    assert P["cbam.default_embedded_emissions.TT"].source.startswith(
+        "IR (EU) 2025/2621"
+    )  # inherited
+    assert P["cbam.benchmark_ammonia"].grade is Grade.A
     unfitted = {p.key for p in P.unfitted()}
     assert {"fitted.run_threshold_theta", "fitted.other_cash_cost_eu"} <= unfitted
     with pytest.raises(ParameterNotFitted):

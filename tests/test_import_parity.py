@@ -2,7 +2,6 @@ import pytest
 
 from nsqueeze.import_parity import ImportParity, Wedge, cbam_charge, landed_price
 from nsqueeze.policy import NoRuleInForce
-from nsqueeze.provenance import Grade
 
 
 @pytest.fixture(scope="module")
@@ -10,17 +9,22 @@ def ip():
     return ImportParity()
 
 
-def test_trinidad_default_cargo_2026_is_about_81_eur(ip):
-    """Worked example: (2.444 × 1.01 − 1.522 × 0.975) × €82.32 ≈ €81/t NH3."""
+def test_trinidad_default_cargo_2026_is_about_79_eur(ip):
+    """Worked example: (2.420 × 1.01 − 1.522 × 0.975) × €82.32 ≈ €79/t NH3."""
     est = ip.cbam("TT", "2026-08-15")
-    assert est.value == pytest.approx(81.0, abs=0.5)
+    assert est.value == pytest.approx(79.0, abs=0.5)
 
 
-def test_cbam_result_is_flagged_by_placeholder_benchmark(ip):
+def test_cbam_inputs_are_official_values(ip):
     est = ip.cbam("TT", "2026-08-15")
-    assert est.grade is Grade.C
-    assert "cbam.benchmark_ammonia" in est.provenance.flags
-    assert "OI-01" in est.provenance.open_items
+    assert "cbam.benchmark_ammonia" not in est.provenance.flags
+    assert "OI-01" not in est.provenance.open_items
+
+
+def test_origin_without_a_country_row_uses_other_countries(ip):
+    # CN: no row on file -> "Other countries and territories" (3.130)
+    est = ip.cbam("CN", "2026-08-15")
+    assert est.value == pytest.approx((3.130 * 1.01 - 1.522 * 0.975) * 82.32, abs=0.1)
 
 
 def test_cbam_price_outside_published_quarter_must_be_supplied(ip):
@@ -33,7 +37,7 @@ def test_cbam_rises_as_free_allocation_phases_out(ip):
     values = [ip.cbam("DZ", f"{y}-06-01", cbam_price=82.32).value for y in range(2026, 2035)]
     assert values == sorted(values)
     # 2034: no free allocation left → whole embedded quantity is charged
-    assert values[-1] == pytest.approx(2.101 * 1.01 * 82.32, abs=0.1)
+    assert values[-1] == pytest.approx(2.080 * 1.01 * 82.32, abs=0.1)
 
 
 def test_verified_low_emissions_never_go_negative():
