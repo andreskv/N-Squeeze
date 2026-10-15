@@ -91,7 +91,7 @@ def t4_annual_levels(*_, **__) -> TestResult:
         4,
         "annual levels",
         "blocked",
-        note="Needs plant universe and ETS verified emissions",
+        note="Needs U_pred; the softness s is not identified by the episode record",
     )
 
 
