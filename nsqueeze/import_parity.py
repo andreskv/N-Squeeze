@@ -32,9 +32,13 @@ def cbam_charge(
     cbam_factor: float,
     price: float,
     markup: float = 0.0,
+    cscf: float = 1.0,
 ) -> float:
-    """CBAM €/t product. ``markup`` applies only to default (not verified actual) values."""
-    certificates = embedded * (1.0 + markup) - benchmark * (1.0 - cbam_factor)
+    """CBAM €/t product. ``markup`` applies only to default (not verified actual) values.
+
+    The free-allocation term is benchmark × (1 − phase-out share) × CSCF.
+    """
+    certificates = embedded * (1.0 + markup) - benchmark * (1.0 - cbam_factor) * cscf
     return max(certificates, 0.0) * price
 
 
@@ -91,23 +95,29 @@ class ImportParity:
         origin: str,
         on: dt.date | str,
         *,
+        product_cn: str = "2814",
         cbam_price: float | None = None,
+        cscf: float | None = None,
         embedded: float | None = None,
     ) -> Estimate[float]:
-        """CBAM €/t NH3 for an ``origin`` cargo imported on ``on``.
+        """CBAM €/t product for an ``origin`` cargo of ammonia (2814) or urea (3102.10).
 
         Default values (plus mark-up) unless verified ``embedded`` emissions are given.
-        ``cbam_price`` defaults to the quarterly CBAM price in force on that date.
+        ``cbam_price`` and ``cscf`` default to the rules in force on that date.
         """
+        urea = product_cn.startswith("3102")
         cf = self.policy.value("cbam_factor", "EU", on)
-        bm_p = self.P["cbam.benchmark_ammonia"]
+        bm_p = self.P["cbam.benchmark_urea" if urea else "cbam.benchmark_ammonia"]
         prov = cf.provenance | Provenance.of(bm_p.ref)
+        if cscf is None:
+            c = self.policy.value("cscf", "EU", on)
+            cscf, prov = c.value, prov | c.provenance
         if embedded is None:
-            # No country default on file: use the generic ammonia default until the
-            # full IR 2025/2621 table is in config. The generic key shows in provenance.
-            key = f"cbam.default_embedded_emissions.{origin}"
+            # An origin without its own row takes "Other countries and territories".
+            table = "cbam.default_embedded_emissions" + ("_urea" if urea else "")
+            key = f"{table}.{origin}"
             if key not in self.P:
-                key = "cbam.default_embedded_emissions.generic"
+                key = f"{table}.generic"
             emb_p, mk_p = self.P[key], self.P["cbam.default_markup_fertilisers"]
             embedded, markup = float(emb_p.value), float(mk_p.value)
             prov |= Provenance.of(emb_p.ref, mk_p.ref)
@@ -122,6 +132,7 @@ class ImportParity:
             cbam_factor=cf.value,
             price=cbam_price,
             markup=markup,
+            cscf=cscf,
         )
         return Estimate(value, prov)
 
@@ -144,7 +155,7 @@ class ImportParity:
             hs4 = product_cn.split(".")[0][:4]
             t_spec = self.policy.value("duty_specific", f"RU_BY:{hs4}", on)
             specific, prov = t_spec.value, prov | t_spec.provenance
-        cb = self.cbam(origin, on, cbam_price=cbam_price)
+        cb = self.cbam(origin, on, product_cn=product_cn, cbam_price=cbam_price)
         w = Wedge(
             fob=fob_eur,
             freight=freight_eur,

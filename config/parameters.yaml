@@ -146,6 +146,22 @@ cbam:
     generic: { value: 3.130, grade: A, name: Other countries and territories }
     _source: IR (EU) 2025/2621 Annex I as corrected by IR (EU) 2026/1740, column 'total emissions'
     _url: https://eur-lex.europa.eu/eli/reg_impl/2026/1740/oj/eng
+  benchmark_urea:
+    value: 0.902
+    unit: tCO2e/t_urea
+    grade: A
+    source: IR (EU) 2025/2620 Annex point 5, Column B (default CBAM benchmark BMg), CN 3102 10 19
+    url: https://eur-lex.europa.eu/eli/reg_impl/2025/2620/oj/eng
+  default_embedded_emissions_urea:   # tCO2e/t urea, CN 3102 10 19, total emissions before mark-up
+    DZ: { value: 1.410, grade: A, name: Algeria }
+    EG: { value: 1.390, grade: A, name: Egypt }
+    RU: { value: 1.470, grade: A, name: Russian Federation }
+    SA: { value: 1.470, grade: A, name: Saudi Arabia }
+    TT: { value: 1.610, grade: A, name: Trinidad and Tobago }
+    US: { value: 2.290, grade: A, name: United States }
+    generic: { value: 2.720, grade: A, name: Other countries and territories }
+    _source: IR (EU) 2025/2621 Annex I as corrected by IR (EU) 2026/1740, column 'total emissions'
+    _url: https://eur-lex.europa.eu/eli/reg_impl/2026/1740/oj/eng
 
 fitted:
   # Calibrated jointly on pre-2026 curtailment episodes (config/episodes.csv), then FROZEN.

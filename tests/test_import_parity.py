@@ -34,10 +34,29 @@ def test_cbam_price_outside_published_quarter_must_be_supplied(ip):
 
 
 def test_cbam_rises_as_free_allocation_phases_out(ip):
-    values = [ip.cbam("DZ", f"{y}-06-01", cbam_price=82.32).value for y in range(2026, 2035)]
+    # No CSCF decision exists after 2030, so the caller supplies one (here 100 %).
+    values = [
+        ip.cbam("DZ", f"{y}-06-01", cbam_price=82.32, cscf=1.0).value for y in range(2026, 2035)
+    ]
     assert values == sorted(values)
     # 2034: no free allocation left → whole embedded quantity is charged
     assert values[-1] == pytest.approx(2.080 * 1.01 * 82.32, abs=0.1)
+
+
+def test_cscf_is_read_from_the_schedule_and_required_after_2030(ip):
+    est = ip.cbam("TT", "2026-08-15")
+    assert any(r.key.startswith("policy:cscf[EU]") for r in est.provenance.refs)
+    with pytest.raises(NoRuleInForce):
+        ip.cbam("TT", "2031-06-01", cbam_price=80.0)
+    lower = ip.cbam("TT", "2026-08-15", cscf=0.9).value
+    assert lower == pytest.approx((2.420 * 1.01 - 1.522 * 0.975 * 0.9) * 82.32, abs=0.1)
+
+
+def test_urea_cargo_uses_urea_default_and_benchmark(ip):
+    est = ip.cbam("TT", "2026-08-15", product_cn="3102.10")
+    assert est.value == pytest.approx((1.610 * 1.01 - 0.902 * 0.975) * 82.32, abs=0.1)
+    w = ip.wedge("TT", "2026-08-15", fob_eur=300, freight_eur=30, product_cn="3102.10")
+    assert w.value.cbam == pytest.approx(est.value)
 
 
 def test_verified_low_emissions_never_go_negative():
