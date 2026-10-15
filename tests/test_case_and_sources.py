@@ -9,6 +9,7 @@ import pytest
 
 from nsqueeze import case_nitrogen as cn
 from nsqueeze import simulation as sim
+from nsqueeze import units
 from nsqueeze.io.sources.eex import parse_report, to_canonical
 from nsqueeze.io.sources.worldbank import parse_workbook
 from nsqueeze.params import ParameterSet
@@ -157,3 +158,14 @@ def test_fit_softness_recovers_s_from_utilisation_levels():
     bound = pd.Series([120.0, 40.0, 80.0], index=months)
     u = pd.Series(1 / (1 + np.exp(-(bound.to_numpy() - 100.0) / 50.0)), index=months)
     assert cn.fit_softness(bound, 100.0, u) == 50.0
+
+
+def test_panel_from_extract_matches_derive(tmp_path):
+    f = tmp_path / "p.csv"
+    f.write_text(
+        "month,ttf_usd_mmbtu,hh_usd_mmbtu,urea_usd_t,eua_eur_t,fx_usd_per_eur\n"
+        "2022-02-01,27.0,4.7,750,90,1.13\n2022-03-01,42.0,4.9,900,77,1.10\n"
+    )
+    p = cn.panel_from_extract(f)
+    assert p.index.name == "month" and list(p.urea_origin) == ["Black Sea", "Middle East"]
+    assert p.ttf_eur_mwh.iloc[0] == pytest.approx(units.usd_mmbtu_to_eur_mwh(27.0, 1.13))

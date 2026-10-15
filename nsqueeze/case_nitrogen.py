@@ -79,6 +79,14 @@ def monthly_panel(store: PITStore | None = None, *, as_of=None) -> pd.DataFrame:
     return p
 
 
+def panel_from_extract(path) -> pd.DataFrame:
+    """The ``monthly_panel`` frame from a CSV extract of its five source columns."""
+    p = pd.read_csv(path, index_col="month", parse_dates=True)
+    return _derive(
+        p[["ttf_usd_mmbtu", "hh_usd_mmbtu", "urea_usd_t", "eua_eur_t", "fx_usd_per_eur"]]
+    )
+
+
 def _derive(p: pd.DataFrame) -> pd.DataFrame:
     p = p.copy()
     p["ttf_eur_mwh"] = units.usd_mmbtu_to_eur_mwh(p.ttf_usd_mmbtu, p.fx_usd_per_eur)
