@@ -111,13 +111,13 @@ pink_sheet_monthly:
   note: The URL embeds a yearly document id; the old worldbank.org mirror serves a stale 2016 file.
 
 ttf_daily_candidate:
-  name: Candidate daily TTF (yfinance TTF=F or paid feed)
+  name: Candidate daily TTF, Yahoo Finance TTF=F front-month close (EUR/MWh), from 2017-10-23
   layer: L2
   frequency: daily
   auth: none
   grade: C    # unusable until it passes the monthly reconciliation test
   recoverable: false   # snapshot daily
-  verified: false
+  verified: true   # fetched and parsed 2026-10-15
   phase: 0
 
 comext:

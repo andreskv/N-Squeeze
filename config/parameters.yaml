@@ -59,10 +59,11 @@ ammonia_tech:
 carbon:
   gas_emission_factor:
     value: 56.1
+    range: [54.3, 58.3]
     unit: tCO2/TJ_LHV
-    grade: B
-    source: IPCC 2006 Guidelines default for natural gas
-    open_item: OI-13
+    grade: A
+    source: IPCC 2006 Guidelines Vol. 2 Ch. 1 Table 1.4, natural gas default (95 % interval in range)
+    url: https://www.ipcc-nggip.iges.or.jp/public/2006gl/pdf/2_Volume2/V2_1_Ch1_Introduction.pdf
   urea_bound_co2_counted_as_emitted:
     value: true
     unit: bool

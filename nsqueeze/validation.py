@@ -178,3 +178,19 @@ EXCLUDE_PARTNERS = frozenset(
     {"EU27_2020", "EXT_EU27_2020", "INT_EU27_2020", "EU", "EXT_EU", "INT_EU", "WORLD", "EA"}
     | EU27_ENTSOG
 )
+
+
+def reconcile_monthly(daily: pd.Series, monthly: pd.Series, *, tolerance: float) -> pd.DataFrame:
+    """Calendar-month mean of a daily series vs an official monthly series (ADR-0004).
+
+    Both in the same unit. ``monthly`` is indexed by the first day of the month. Only
+    months that both series cover are compared. The series passes if every month is
+    within ``tolerance`` (relative).
+    """
+    d = daily.dropna()
+    m = d.groupby(d.index.to_period("M")).agg(["mean", "count"])
+    ref = monthly.set_axis(pd.DatetimeIndex(monthly.index).to_period("M"))
+    out = m.join(ref.rename("official"), how="inner")
+    out["deviation"] = out["mean"] / out.official - 1
+    out["within"] = out.deviation.abs() <= tolerance
+    return out

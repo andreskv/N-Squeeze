@@ -25,9 +25,18 @@ def test_point_in_time_benchmark(pol):
     assert pol.value("ets_benchmark", "NH3", "2026-01-01").value == 1.522
 
 
-def test_unresolved_rule_raises_with_open_item(pol):
-    with pytest.raises(NoRuleInForce, match="OI-05"):
-        pol.value("duty_specific", "RU_BY:2814", "2026-08-01")
+def test_unresolved_rule_raises_with_open_item(tmp_path):
+    f = tmp_path / "schedule.csv"
+    f.write_text(
+        "parameter,scope,value,unit,effective_from,effective_to,grade,source,notes\n"
+        "duty_specific,X:2814,,EUR/t,2025-07-01,,C,-,OI-99 not known yet\n"
+    )
+    with pytest.raises(NoRuleInForce, match="OI-99"):
+        PolicySchedule.load(f).value("duty_specific", "X:2814", "2026-08-01")
+
+
+def test_russian_ammonia_has_no_specific_duty(pol):
+    assert pol.value("duty_specific", "RU_BY:2814", "2026-08-01").value == 0
 
 
 def test_series_lookup(pol):

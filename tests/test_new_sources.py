@@ -231,3 +231,23 @@ def test_ets_verified_emissions_parse():
         "/document/download/b_en?filename=verified_emissions_2025_en.xlsx",
         2025,
     )
+
+
+def test_yahoo_ttf_dates_in_exchange_time_zone():
+    from nsqueeze.io.sources.yahoo import chart_to_canonical
+
+    body = {
+        "chart": {
+            "result": [
+                {
+                    "meta": {"currency": "EUR", "exchangeName": "NYM", "gmtoffset": -18000},
+                    # 2025-12-01 05:00 and 2025-12-02 05:00 UTC = 00:00 New York; one null close
+                    "timestamp": [1764565200, 1764651600, 1764738000],
+                    "indicators": {"quote": [{"close": [28.2, None, 28.0]}]},
+                }
+            ]
+        }
+    }
+    df = chart_to_canonical(body)
+    assert df.observed_at.dt.strftime("%Y-%m-%d").tolist() == ["2025-12-01", "2025-12-03"]
+    assert df.unit.unique().tolist() == ["EUR/MWh"] and df.series_id.iloc[0] == "YF.TTF=F"

@@ -21,6 +21,7 @@ from nsqueeze.io.sources.gie import AGSI, ALSI
 from nsqueeze.io.sources.openmeteo import OpenMeteoWeather
 from nsqueeze.io.sources.portwatch import PortWatch
 from nsqueeze.io.sources.worldbank import PinkSheetMonthly
+from nsqueeze.io.sources.yahoo import YahooTTF
 
 
 def _stub(source_name: str, phase: int) -> type[Source]:
@@ -46,7 +47,7 @@ REGISTRY: dict[str, type[Source]] = {
         EurostatGasTrade,
         OpenMeteoWeather,
         PortWatch,
-        _stub("ttf_daily_candidate", 0),
+        YahooTTF,
         _stub("wto_hormuz", 0),
         ETSVerifiedEmissions,
     )

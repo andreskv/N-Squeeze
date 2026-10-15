@@ -48,3 +48,16 @@ def test_t5_placebo_passes_real_lag_and_fails_noise():
         for _ in range(30)
     ]
     assert sum(passes) <= 8  # 30 draws at alpha 0.10: expected 3
+
+
+def test_reconcile_monthly_flags_months_outside_tolerance():
+    idx = pd.date_range("2020-01-01", "2020-02-29", freq="D")
+    daily = pd.Series(10.0, index=idx)
+    daily["2020-02"] = 10.5
+    monthly = pd.Series(
+        [10.1, 10.0, 9.0], index=pd.to_datetime(["2020-01-01", "2020-02-01", "2020-03-01"])
+    )
+    r = v.reconcile_monthly(daily, monthly, tolerance=0.03)
+    assert list(r.index.astype(str)) == ["2020-01", "2020-02"]  # March has no daily data
+    assert r.within.tolist() == [True, False]
+    assert r.loc["2020-02", "deviation"] == pytest.approx(0.05)
