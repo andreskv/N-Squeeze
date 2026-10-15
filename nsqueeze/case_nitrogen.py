@@ -236,6 +236,37 @@ def false_alarms(signal: pd.Series, *, quiet=("2015-04-01", "2020-12-31")) -> in
 THETA_GRID = np.arange(0, 401, 5)  # €/t urea
 
 
+def _onset_loss(bound: pd.Series, theta: float, labels) -> float:
+    sig = bound < theta
+    sc = score_onsets(sig)
+    sc = sc[sc.episode.isin(labels)]
+    return sc.lead_months.fillna(12).abs().sum() + false_alarms(sig)
+
+
+def fit_threshold(bound: pd.Series, labels=None, grid: np.ndarray = THETA_GRID) -> float:
+    """θ′ that minimises the onset loss on ``labels`` (default: every episode).
+
+    Ties break toward the smallest θ′ (the most conservative rule).
+    """
+    labels = sorted(episode_onsets().cluster.unique()) if labels is None else labels
+    losses = [_onset_loss(bound, t, labels) for t in grid]
+    return float(grid[int(np.argmin(losses))])
+
+
+def fit_softness(
+    bound: pd.Series, theta: float, utilisation: pd.Series, grid: np.ndarray | None = None
+) -> float:
+    """s that best fits sigmoid((M̄ − θ′)/s) to documented utilisation levels (least squares).
+
+    ``utilisation`` is indexed by month start, values in [0, 1].
+    """
+    grid = np.arange(1, 401, 1.0) if grid is None else grid
+    m = bound.reindex(utilisation.index).to_numpy(float) - theta
+    u = utilisation.to_numpy(float)
+    sse = [float(np.sum((1 / (1 + np.exp(-m / s)) - u) ** 2)) for s in grid]
+    return float(grid[int(np.argmin(sse))])
+
+
 def fit_threshold_loo(bound: pd.Series, grid: np.ndarray = THETA_GRID) -> pd.DataFrame:
     """Fit θ′ on all episodes but one, score the one left out, for each episode.
 
@@ -247,16 +278,7 @@ def fit_threshold_loo(bound: pd.Series, grid: np.ndarray = THETA_GRID) -> pd.Dat
     rows = []
     for test in clusters:
         train = [c for c in clusters if c != test]
-
-        def loss(theta, labels):
-            sig = bound < theta
-            sc = score_onsets(sig)
-            sc = sc[sc.episode.isin(labels)]
-            err = sc.lead_months.fillna(12).abs().sum()
-            return err + false_alarms(sig)
-
-        losses = [loss(t, train) for t in grid]
-        theta = float(grid[int(np.argmin(losses))])
+        theta = fit_threshold(bound, train, grid)
         sc = score_onsets(bound < theta)
         held = sc[sc.episode == test].iloc[0]
         rows.append(

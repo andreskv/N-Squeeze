@@ -150,3 +150,10 @@ def test_simulation_smoke():
     assert e1.level_corr.iloc[0] > 0.9 and e1.change_snr.iloc[0] < 1
     e4 = sim.e4_few_events(n_episodes_grid=(2, 16), n_mc=40)
     assert np.isnan(e4.reject_clustered.iloc[0])
+
+
+def test_fit_softness_recovers_s_from_utilisation_levels():
+    months = pd.to_datetime(["2021-09-01", "2022-08-01", "2023-04-01"])
+    bound = pd.Series([120.0, 40.0, 80.0], index=months)
+    u = pd.Series(1 / (1 + np.exp(-(bound.to_numpy() - 100.0) / 50.0)), index=months)
+    assert cn.fit_softness(bound, 100.0, u) == 50.0
