@@ -15,12 +15,12 @@ ets_benchmark,HNO3,0.151,tCO2e/t,2026-01-01,2030-12-31,B,CBAM Guide,N2O-dominate
 cbam_price,EU,82.32,EUR/tCO2,2026-07-01,2026-09-30,B,CBAM Guide tracker,Q3 2026 quarterly average of EUA auctions; weekly from 2027
 duty_ad_valorem,MFN:2814,0.055,share,2000-01-01,,A,Commission statements,Normal MFN rate ammonia
 duty_ad_valorem,MFN:3102.10,0.065,share,2000-01-01,,A,Commission statements,Normal MFN rate urea
-duty_ad_valorem,MFN:2814,0.0,share,2026-05-30,2027-05-31,B,Council via BCInsight / Global Trade Alert,Within quota; end date approximate (May 2027) — OI-15
-duty_ad_valorem,MFN:3102.10,0.0,share,2026-05-30,2027-05-31,B,Council via BCInsight / Global Trade Alert,Within quota; excludes RU/BY — OI-15
+duty_ad_valorem,MFN:2814,0.0,share,2026-05-30,2027-05-31,A,Council Regulation (EU) 2026/1181 Art. 1 and 4,Within the aggregate quota in the Annex; excludes RU/BY
+duty_ad_valorem,MFN:3102.10,0.0,share,2026-05-30,2027-05-31,A,Council Regulation (EU) 2026/1181 Art. 1 and 4,Within the aggregate quota in the Annex; excludes RU/BY under Reg. 2025/1227
 duty_ad_valorem,PREF:2814,0.0,share,2000-01-01,,B,CRU / BCInsight,Trinidad / Algeria / Egypt preferential
 duty_ad_valorem,PREF:3102.10,0.0,share,2000-01-01,,B,CRU / BCInsight,Trinidad / Algeria / Egypt preferential
 duty_ad_valorem,RU_BY:3102.10,0.065,share,2025-07-01,,A,Regulation (EU) 2025/1227 Art. 1(2),Not suspended
-duty_ad_valorem,RU_BY:2814,0.055,share,2000-01-01,,B,Common Customs Tariff,Reg. 2025/1227 does not list 2814; assumes the 2026-27 MFN suspension excludes RU/BY as for urea - OI-15
+duty_ad_valorem,RU_BY:2814,0.055,share,2000-01-01,,A,Common Customs Tariff; Reg. (EU) 2026/1181 Art. 1(2),Reg. 2025/1227 does not list 2814; the 2026-27 suspension excludes RU/BY
 duty_specific,RU_BY:3102,40,EUR/t,2025-07-01,2026-06-30,A,Regulation (EU) 2025/1227 Art. 1(2),
 duty_specific,RU_BY:3102,60,EUR/t,2026-07-01,2027-06-30,A,Regulation (EU) 2025/1227 Art. 1(2),
 duty_specific,RU_BY:3102,80,EUR/t,2027-07-01,2028-06-30,A,Regulation (EU) 2025/1227 Art. 1(2),
