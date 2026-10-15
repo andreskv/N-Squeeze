@@ -115,7 +115,7 @@ ttf_daily_candidate:
   layer: L2
   frequency: daily
   auth: none
-  grade: C    # unusable until it passes the monthly reconciliation test
+  grade: B    # passed the monthly reconciliation test on 2026-10-15 (98 of 98 months within 3 %)
   recoverable: false   # snapshot daily
   verified: true   # fetched and parsed 2026-10-15
   phase: 0
