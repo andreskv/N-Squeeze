@@ -263,6 +263,15 @@ fan_chart:
     unit: TWh/d
     grade: C
     basis: Rule - mean daily net supply into the EU, 1 Jan to 31 Mar, in 2023, 2024 and 2025 (after the March 2022 break, before 2026); low, mid and high are the minimum, mean and maximum of the three
+  draws_per_weather_year:
+    value: 97
+    unit: draws
+    grade: C
+    basis: Rule - at least 2500 draws in total over the 26 weather years 2000-2025, so the Monte Carlo standard error of a probability is at most 0.01. Seed 0
+  residual_block:
+    value: whole_window
+    grade: C
+    basis: Model error is one contiguous block of fitted daily residuals as long as the forecast window. Chosen 16 Oct 2026 after a first rule (block = lag where the residual autocorrelation falls below 1/e) gave 1 day and an error SD of 5.3 pp against 7.6 pp for whole-window blocks
 
 reference_volumes_2024:
   # EU imports, for CBAM sanity check (validation test 6)
