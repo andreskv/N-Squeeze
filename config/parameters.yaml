@@ -263,6 +263,10 @@ fan_chart:
     unit: TWh/d
     grade: C
     basis: Rule - mean daily net supply into the EU, 1 Jan to 31 Mar, in 2023, 2024 and 2025 (after the March 2022 break, before 2026); low, mid and high are the minimum, mean and maximum of the three
+  log_window:
+    value: ["2027-01-04", "2027-04-01"]
+    grade: C
+    basis: Pre-registered 16 Oct 2026 - one entry a week from the first date; the forecast is for EU storage on the second date
   draws_per_weather_year:
     value: 97
     unit: draws

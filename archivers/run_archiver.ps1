@@ -20,6 +20,11 @@ if ($Source -eq "ais") {
     Out-File -Append -Encoding utf8 (Join-Path $repo "data\logs\ais_stream.log")
   exit $LASTEXITCODE
 }
-$out = & (Join-Path $repo ".venv\Scripts\nsq.exe") archive $Source --days $Days 2>&1
+if ($Source -eq "fan_chart") {
+  # Weekly forecast entry; nsq refuses to write outside the pre-registered window.
+  $out = & (Join-Path $repo ".venv\Scripts\nsq.exe") fan-chart 2>&1
+} else {
+  $out = & (Join-Path $repo ".venv\Scripts\nsq.exe") archive $Source --days $Days 2>&1
+}
 "$stamp $Source exit=$LASTEXITCODE $out" | Out-File -Append -Encoding utf8 $log
 exit $LASTEXITCODE

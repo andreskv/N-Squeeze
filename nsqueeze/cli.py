@@ -5,6 +5,7 @@ nsq sources                registered data sources and their status
 nsq archive <source> …     fetch into the point-in-time store
 nsq jobs …                 pausable, resumable back-fills (new | run | pause | resume | status)
 nsq figures                render README figures into docs/assets/
+nsq fan-chart [--dry-run]  weekly end-of-winter storage forecast into data/logs/fan_chart/
 """
 
 from __future__ import annotations
@@ -116,6 +117,90 @@ def _figures(a: argparse.Namespace) -> int:
     return 0
 
 
+LABEL = "Model failed back-cast calibration (G2: MAE 7.03 pp, limit 5 pp)."
+
+
+def _fan_chart(a: argparse.Namespace) -> int:
+    import json
+    import subprocess
+
+    from nsqueeze import gas_balance as gb
+    from nsqueeze.freeze import require_frozen
+    from nsqueeze.io import PITStore
+    from nsqueeze.params import ParameterSet
+
+    frozen = require_frozen()
+    P = ParameterSet.load()
+    first, until = (dt.date.fromisoformat(d) for d in P.value("fan_chart.log_window"))
+    now = dt.datetime.now(dt.UTC)
+    if not a.dry_run and not first <= now.date() < until:
+        raise SystemExit(f"nsq fan-chart: outside the logging window {first} to {until}")
+    store = PITStore()
+    # The model is fitted once: on data to 2025 as known on the freeze date, every week.
+    fit_as_of = f"{frozen.frozen_at}T23:59:59"
+    frame = gb.layer1_inputs(store, as_of=fit_as_of)
+    frame = frame[frame.index < "2026-01-01"].copy()
+    frame["dS"] = frame.storage.diff()
+    model = gb.BalanceModel().fit(frame)
+    hdd = gb.daily_hdd(
+        store.read("weather", as_of=fit_as_of), store.read("eurostat_population", as_of=fit_as_of)
+    )
+    st = gb.eu_storage(store.read("agsi")).dropna()
+    start = st.index[-1].date()
+    thresholds = P.value("fan_chart.storage_thresholds_pct")
+    supply = P.value("fan_chart.supply_scenarios_twh_d")
+    draws = P.value("fan_chart.draws_per_weather_year")
+    years = list(range(2000, 2026))
+    p = gb.fan_chart(
+        model,
+        float(st.storage.iloc[-1]),
+        start,
+        until,
+        hdd,
+        supply,
+        weather_years=years,
+        draws=draws,
+        wgv_twh=float(st.wgv.iloc[-1]),
+        thresholds_pct=thresholds,
+        seed=0,
+    )
+
+    def git(*c: str) -> str:
+        return subprocess.run(
+            ["git", *c], cwd=REPO_ROOT, capture_output=True, text=True
+        ).stdout.strip()
+
+    entry = {
+        "issued_at": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "commit": git("rev-parse", "HEAD"),
+        "tracked_changes": bool(git("status", "--porcelain", "--untracked-files=no")),
+        "label": LABEL,
+        "model": f"G2 (trial 1), fitted on data to 2025-12-31 as known on {frozen.frozen_at}",
+        "start": {
+            "gas_day": str(start),
+            "storage_twh": float(st.storage.iloc[-1]),
+            "wgv_twh": float(st.wgv.iloc[-1]),
+        },
+        "until": str(until),
+        "thresholds_pct": thresholds,
+        "supply_twh_d": supply,
+        "weather_years": [years[0], years[-1]],
+        "draws_per_weather_year": draws,
+        "seed": 0,
+        "p_below": p,
+    }
+    text = json.dumps(entry, indent=2)
+    if a.dry_run:
+        print(text)
+        return 0
+    out = REPO_ROOT / "data" / "logs" / "fan_chart" / f"{now.date()}.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    with open(out, "x", encoding="utf-8") as fh:  # never overwrite an entry
+        fh.write(text + "\n")
+    print(f"wrote {out}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     # Windows consoles default to cp1252, which cannot print ⚑ ≈ · → used in reports.
     for stream in (sys.stdout, sys.stderr):
@@ -138,6 +223,9 @@ def main(argv: list[str] | None = None) -> int:
     jb.add_argument("--until")
     jb.set_defaults(fn=_jobs)
     sub.add_parser("figures", help="render docs/assets figures").set_defaults(fn=_figures)
+    fc = sub.add_parser("fan-chart", help="weekly end-of-winter storage forecast")
+    fc.add_argument("--dry-run", action="store_true", help="print the entry, write nothing")
+    fc.set_defaults(fn=_fan_chart)
     a = ap.parse_args(argv)
     return a.fn(a)
 

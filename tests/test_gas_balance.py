@@ -394,3 +394,22 @@ def test_layer1_inputs():
     f = gb.layer1_frame(st, supply, h, pw.power_twh_e)
     assert list(f.index) == [d1]  # only days present in every input
     assert f.loc[d1, "supply"] == 1.5
+
+
+def test_fan_chart_pools_scenarios_and_needs_every_weather_year():
+    f = _synthetic()
+    f["dS"] = f.storage.diff()
+    m = gb.BalanceModel().fit(f)
+    args = (m, 600.0, dt.date(2025, 1, 5), dt.date(2025, 4, 1), f.hdd)
+    supply = {"low": 10.98, "high": 11.02}
+    kw = dict(
+        weather_years=[2016, 2017, 2018], draws=20, wgv_twh=1100.0, thresholds_pct=[37.8, 38.1]
+    )
+    p = gb.fan_chart(*args, supply, **kw)
+    assert p == gb.fan_chart(*args, supply, **kw)  # fixed seed: same entry every run
+    for s in ("low", "high", "pooled"):
+        assert 0 < p[s]["37.8"] < p[s]["38.1"] < 1  # both inside the spread
+    assert p["low"]["38.1"] > p["high"]["38.1"]  # less supply, more mass below the threshold
+    assert p["pooled"]["38.1"] == pytest.approx((p["low"]["38.1"] + p["high"]["38.1"]) / 2)
+    with pytest.raises(ValueError):
+        gb.fan_chart(*args, supply, **{**kw, "weather_years": [2016, 2030]})

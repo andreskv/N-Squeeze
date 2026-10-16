@@ -588,6 +588,52 @@ def breach_probability(end_storage_share: np.ndarray, threshold: float) -> float
     return float(np.mean(x < threshold))
 
 
+def fan_chart(
+    model: BalanceModel,
+    start_storage_twh: float,
+    start: dt.date,
+    until: dt.date,
+    hdd_history: pd.Series,
+    supply_twh_d: dict[str, float],
+    *,
+    weather_years: list[int],
+    draws: int,
+    wgv_twh: float,
+    thresholds_pct: list[float],
+    seed: int = 0,
+) -> dict[str, dict[str, float]]:
+    """P(storage on ``until`` < X % of working gas), per supply scenario and pooled.
+
+    Each draw adds one block of fitted residuals as long as the whole window. Every
+    scenario starts from the same seed, so scenarios differ only by supply. Pooled is
+    the equal-weight mean over scenarios.
+    """
+    block = (pd.Timestamp(until) - pd.Timestamp(start)).days
+    out = {}
+    for name, s in supply_twh_d.items():
+        rng = np.random.default_rng(seed)
+        ends = [
+            model.simulate(
+                start_storage_twh,
+                start,
+                until,
+                hdd_history,
+                SupplyScenario(name, s),
+                weather_years=weather_years,
+                block_days=block,
+                rng=rng,
+            )
+            for _ in range(draws)
+        ]
+        if any(len(e) != len(weather_years) for e in ends):
+            raise ValueError("HDD history does not cover every weather year for this window")
+        share = 100 * np.concatenate([e.to_numpy() for e in ends]) / wgv_twh
+        out[name] = {f"{x:g}": breach_probability(share, x) for x in thresholds_pct}
+    keys = [f"{x:g}" for x in thresholds_pct]
+    out["pooled"] = {k: float(np.mean([out[n][k] for n in supply_twh_d])) for k in keys}
+    return out
+
+
 # leave-one-winter-out back-cast
 
 
