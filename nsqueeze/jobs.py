@@ -56,6 +56,7 @@ CHUNK_DAYS = {
     "alsi": 92,
     "portwatch": 366,
     "entsoe": 366,
+    "s2_swir": 92,  # one quarter: about 20 scenes per plant, one Earth Engine call each
 }
 
 

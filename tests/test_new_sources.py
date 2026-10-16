@@ -251,3 +251,17 @@ def test_yahoo_ttf_dates_in_exchange_time_zone():
     df = chart_to_canonical(body)
     assert df.observed_at.dt.strftime("%Y-%m-%d").tolist() == ["2025-12-01", "2025-12-03"]
     assert df.unit.unique().tolist() == ["EUR/MWh"] and df.series_id.iloc[0] == "YF.TTF=F"
+
+
+def test_sentinel2_scene_features_to_rows():
+    from nsqueeze.io.sources.sentinel2 import STATS, to_canonical
+
+    props = {s: 0.5 for s in STATS} | {
+        "time": 1659524220339,
+        "product_id": "S2B_X",
+        "b12_p99": None,
+    }
+    df = to_canonical([{"properties": props}], "NL-SLUISK")
+    assert len(df) == len(STATS) - 1  # a missing statistic (cloud-free box empty) is left out
+    assert df.series_id.str.startswith("S2.NL-SLUISK.").all()
+    assert str(df.observed_at.iloc[0]) == "2022-08-03 10:57:00.339000"

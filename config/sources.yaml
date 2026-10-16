@@ -230,6 +230,17 @@ eurostat_population_nuts2:
   verified: true   # parsed 2026-10-14
   phase: 2
 
+s2_swir:
+  name: Sentinel-2 L1C SWIR statistics in a box around each ammonia plant, per scene (Google Earth Engine)
+  layer: L3
+  frequency: per scene (about 5 days)
+  auth: GEE_PROJECT + earthengine authenticate
+  grade: B
+  role: raw input for the satellite utilisation index; no hot-spot threshold applied in the archive
+  recoverable: true
+  verified: true   # prototype 2026-10-16
+  phase: 3
+
 eurostat_gas_trade:
   name: Eurostat EU-27 gas imports and exports by partner, monthly (nrg_ti_gasm, nrg_te_gasm)
   layer: L1

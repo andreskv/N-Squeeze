@@ -225,6 +225,19 @@ validation:
     grade: C
     basis: Pre-set kill criterion for Layer 3
 
+eaui:
+  s2_box_radius_m:
+    value: 1000
+    unit: m
+    grade: C
+    basis: Judgement - a circle of this radius around the GEM coordinate covers a typical ammonia plant (reformer, stacks, flare); checked on Sluiskil only
+  s2_clear_cs_cdf:
+    value: 0.6
+    unit: score
+    grade: B
+    source: Earth Engine catalog, Cloud Score+ S2_HARMONIZED - example threshold 0.60; values between 0.50 and 0.65 generally work well
+    url: https://developers.google.com/earth-engine/datasets/catalog/GOOGLE_CLOUD_SCORE_PLUS_V1_S2_HARMONIZED
+
 reference_volumes_2024:
   # EU imports, for CBAM sanity check (validation test 6)
   ammonia_mt:        { value: 2.0, grade: B, source: Just Food }
