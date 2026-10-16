@@ -238,6 +238,33 @@ eaui:
     source: Earth Engine catalog, Cloud Score+ S2_HARMONIZED - example threshold 0.60; values between 0.50 and 0.65 generally work well
     url: https://developers.google.com/earth-engine/datasets/catalog/GOOGLE_CLOUD_SCORE_PLUS_V1_S2_HARMONIZED
 
+regime:
+  # Chokepoint regime R(t) thresholds. Rules fixed 16 Oct 2026, before the values were computed; data 2019-2025 only
+  transit_ratio_shock:
+    value: 0.5561
+    unit: ratio to the 2019-2025 median of daily Hormuz transits (84 per day)
+    grade: C
+    basis: Rule - below the lowest 7-day mean ratio in 2019-2025 (reached 11 Dec 2019). IMF PortWatch chokepoint6 n_total, 2557 of 2557 days
+  gas_spread_stress:
+    value: null
+    unit: EUR/MWh
+    grade: C
+    status: pending_data
+    basis: Rule - 90th percentile of the 7-day mean of daily TTF minus Henry Hub, 2019-2025. Needs a daily Henry Hub history; the archive starts on 5 Oct 2026
+
+fan_chart:
+  # Weekly end-of-winter storage forecast, winter 2026/27. Rules fixed 16 Oct 2026, before the values were computed
+  storage_thresholds_pct:
+    value: [30.55, 44.0]
+    unit: percent of working-gas volume on 1 April
+    grade: C
+    basis: Rule - lower and upper thirds (numpy linear quantiles) of EU storage on 1 April, winters ending 2016-2025, from AGSI+
+  supply_scenarios_twh_d:
+    value: { low: 9.1128, mid: 9.3122, high: 9.4801 }
+    unit: TWh/d
+    grade: C
+    basis: Rule - mean daily net supply into the EU, 1 Jan to 31 Mar, in 2023, 2024 and 2025 (after the March 2022 break, before 2026); low, mid and high are the minimum, mean and maximum of the three
+
 reference_volumes_2024:
   # EU imports, for CBAM sanity check (validation test 6)
   ammonia_mt:        { value: 2.0, grade: B, source: Just Food }
