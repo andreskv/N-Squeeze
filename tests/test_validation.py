@@ -4,7 +4,7 @@ import pandas as pd
 import pytest
 
 from nsqueeze import validation as v
-from nsqueeze.freeze import HoldoutLocked
+from nsqueeze.freeze import FreezeState, HoldoutLocked
 from nsqueeze.params import ParameterSet
 
 
@@ -13,7 +13,10 @@ def test_t1_arithmetic_passes_on_graded_h():
     assert r.status == "pass" and r.value < 0.01
 
 
-def test_blocked_and_sealed_tests_say_why():
+def test_blocked_and_sealed_tests_say_why(monkeypatch):
+    monkeypatch.setattr(
+        FreezeState, "load", classmethod(lambda cls, path=None: cls(False, None, None))
+    )
     assert v.t4_annual_levels().status == "blocked"
     with pytest.raises(HoldoutLocked):
         v.t6_cbam_sanity()

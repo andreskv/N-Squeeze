@@ -57,7 +57,10 @@ def test_parameter_registry():
         P.value("fitted.run_softness_s")
 
 
-def test_holdout_is_locked_until_frozen():
+def test_holdout_is_locked_until_frozen(monkeypatch):
+    monkeypatch.setattr(
+        FreezeState, "load", classmethod(lambda cls, path=None: cls(False, None, None))
+    )
     with pytest.raises(HoldoutLocked):
         require_frozen(FreezeState(frozen=False, preregistration_sha256=None, frozen_at=None))
     with pytest.raises(HoldoutLocked):
