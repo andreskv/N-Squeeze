@@ -246,11 +246,10 @@ regime:
     grade: C
     basis: Rule - below the lowest 7-day mean ratio in 2019-2025 (reached 11 Dec 2019). IMF PortWatch chokepoint6 n_total, 2557 of 2557 days
   gas_spread_stress:
-    value: null
+    value: 85.29
     unit: EUR/MWh
     grade: C
-    status: pending_data
-    basis: Rule - 90th percentile of the 7-day mean of daily TTF minus Henry Hub, 2019-2025. Needs a daily Henry Hub history; the archive starts on 5 Oct 2026
+    basis: Rule - 90th percentile of the 7-observation mean of daily TTF (Yahoo TTF=F) minus Henry Hub (EIA RNGWHHD, converted with same-day ECB USD/EUR), 2019-2025, on the 1735 days with all three. Days above it fall in 2021 (15) and 2022 (159)
 
 fan_chart:
   # Weekly end-of-winter storage forecast, winter 2026/27. Rules fixed 16 Oct 2026, before the values were computed
