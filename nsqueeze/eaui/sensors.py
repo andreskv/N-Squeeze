@@ -1,5 +1,5 @@
-"""Sensor catalogue. Resolutions/revisits are *from memory* — verify each
-against mission documentation. ``prior`` is a judgement; measuring it is the point.
+"""Sensor catalogue. Resolutions and revisits checked against mission documentation
+(ESA, EUMETSAT, NASA/USGS) on 2026-10-15. ``prior`` is a judgement; measuring it is the point.
 
 Learning order: Nightfire first (point CSVs, no rasters) → Sentinel-2 SWIR clipped to
 small boxes around each plant → fusion model.
@@ -56,7 +56,7 @@ SENSORS: tuple[Sensor, ...] = (
         "s5p_no2",
         "Sentinel-5P NO₂",
         "Combustion emissions",
-        "≈ 5.5 × 3.5 km",
+        "3.5 × 5.5 km (along-track 7 km before 2019-08-06)",
         "low (single plants)",
         "gaussian",
         4,
@@ -66,7 +66,7 @@ SENSORS: tuple[Sensor, ...] = (
         "landsat_tirs",
         "Landsat 8/9 thermal",
         "Surface heat",
-        "100 m, 8-day combined revisit",
+        "100 m (delivered at 30 m), 8-day combined revisit",
         "low–medium",
         "gaussian",
         6,
