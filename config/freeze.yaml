@@ -8,7 +8,7 @@
 # ─────────────────────────────────────────────────────────────────────────────
 
 frozen: false
-preregistration_commit: null   # e.g. "a1b2c3d" — the commit that froze PREREGISTRATION.md
+preregistration_sha256: null   # SHA-256 of PREREGISTRATION.md, which stays private; the commit that adds it dates it
 frozen_at: null                # ISO date
 calibration_window: ["2015-01-01", "2025-12-31"]
 holdout_window: ["2026-01-01", null]

@@ -59,8 +59,24 @@ def test_parameter_registry():
 
 def test_holdout_is_locked_until_frozen():
     with pytest.raises(HoldoutLocked):
-        require_frozen(FreezeState(frozen=False, preregistration_commit=None, frozen_at=None))
+        require_frozen(FreezeState(frozen=False, preregistration_sha256=None, frozen_at=None))
     with pytest.raises(HoldoutLocked):
         load_episodes(include_holdout=True)
     calib = load_episodes()
     assert (calib["date"] < "2026-01-01").all()
+
+
+def test_freeze_rejects_an_edited_preregistration(tmp_path, monkeypatch):
+    import nsqueeze.freeze as fz
+
+    (tmp_path / "config").mkdir()
+    doc = tmp_path / "PREREGISTRATION.md"
+    doc.write_text("frozen text")
+    monkeypatch.setattr(fz, "config_dir", lambda: tmp_path / "config")
+    state = FreezeState(
+        frozen=True, preregistration_sha256=fz.preregistration_sha256(doc), frozen_at="2026-12-01"
+    )
+    assert require_frozen(state) is state
+    doc.write_text("frozen text, edited")
+    with pytest.raises(HoldoutLocked):
+        require_frozen(state)

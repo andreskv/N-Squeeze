@@ -2,10 +2,14 @@
 
 Until parameters are frozen, 2026 hold-out episodes cannot be loaded. This turns
 "don't peek" from a promise into a code path that raises.
+
+The pre-registration document stays private. Only its SHA-256 is committed, so the
+public commit dates the document without publishing it.
 """
 
 from __future__ import annotations
 
+import hashlib
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -22,13 +26,13 @@ class HoldoutLocked(PermissionError):
 @dataclass(frozen=True)
 class FreezeState:
     frozen: bool
-    preregistration_commit: str | None
+    preregistration_sha256: str | None
     frozen_at: str | None
 
     @classmethod
     def load(cls, path: Path | None = None) -> FreezeState:
         raw = yaml.safe_load((path or config_dir() / "freeze.yaml").read_text(encoding="utf-8"))
-        return cls(bool(raw["frozen"]), raw.get("preregistration_commit"), raw.get("frozen_at"))
+        return cls(bool(raw["frozen"]), raw.get("preregistration_sha256"), raw.get("frozen_at"))
 
 
 def sealed_after(state: FreezeState | None = None) -> pd.Timestamp | None:
@@ -39,7 +43,7 @@ def sealed_after(state: FreezeState | None = None) -> pd.Timestamp | None:
     figure before the pre-registration commit exists.
     """
     s = state or FreezeState.load()
-    if s.frozen and s.preregistration_commit:
+    if s.frozen and s.preregistration_sha256:
         return None
     raw = yaml.safe_load((config_dir() / "freeze.yaml").read_text(encoding="utf-8"))
     return pd.Timestamp(raw["calibration_window"][1])
@@ -47,12 +51,21 @@ def sealed_after(state: FreezeState | None = None) -> pd.Timestamp | None:
 
 def require_frozen(state: FreezeState | None = None) -> FreezeState:
     s = state or FreezeState.load()
-    if not (s.frozen and s.preregistration_commit):
+    if not (s.frozen and s.preregistration_sha256):
         raise HoldoutLocked(
-            "Parameters are not frozen. Commit PREREGISTRATION.md, record the hash in "
-            "config/freeze.yaml and set frozen: true before touching 2026 hold-out data."
+            "Parameters are not frozen. Record the SHA-256 of PREREGISTRATION.md in "
+            "config/freeze.yaml, set frozen: true and commit, before you use 2026 hold-out data."
+        )
+    doc = config_dir().parent / "PREREGISTRATION.md"
+    if doc.exists() and preregistration_sha256(doc) != s.preregistration_sha256:
+        raise HoldoutLocked(
+            "PREREGISTRATION.md changed after the freeze: its SHA-256 does not match."
         )
     return s
+
+
+def preregistration_sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def load_episodes(*, include_holdout: bool = False) -> pd.DataFrame:
