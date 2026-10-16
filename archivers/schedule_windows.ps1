@@ -43,6 +43,7 @@ $jobs = @(
   @{ Source = "eurostat_hdd"; At = "07:15"; Weekly = $true; Days = 400 },
   @{ Source = "eurostat_population"; At = "07:20"; Weekly = $true; Days = 800 },
   @{ Source = "eurostat_gas_trade"; At = "07:25"; Weekly = $true; Days = 400 },
+  @{ Source = "s2_swir"; At = "07:40"; Weekly = $true; Days = 21 },
   # Live AIS stream: starts at log-on and runs until the task is disabled
   @{ Source = "ais"; AtLogOn = $true }
 )
