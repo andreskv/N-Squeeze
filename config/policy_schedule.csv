@@ -12,7 +12,9 @@ ets_benchmark,NH3,1.57,tCO2e/t,2021-01-01,2025-12-31,B,S&P Global Platts,
 ets_benchmark,NH3,1.522,tCO2e/t,2026-01-01,2030-12-31,A,IR (EU) 2026/1412 Annex (benchmark value 2026-2030),
 cscf,EU,1.0,share,2026-01-01,2030-12-31,A,Implementing Decision (EU) 2026/1862 Art. 1,Cross-sectoral correction factor 100 % each year 2026-2030
 ets_benchmark,HNO3,0.151,tCO2e/t,2026-01-01,2030-12-31,B,CBAM Guide,N2O-dominated
-cbam_price,EU,82.32,EUR/tCO2,2026-07-01,2026-09-30,B,CBAM Guide tracker,Q3 2026 quarterly average of EUA auctions; weekly from 2027
+cbam_price,EU,75.36,EUR/tCO2,2026-01-01,2026-03-31,A,European Commission price of CBAM certificates page (IR (EU) 2025/2548),Q1 2026 weighted average of EUA auction clearing prices; published 7 Apr 2026
+cbam_price,EU,75.28,EUR/tCO2,2026-04-01,2026-06-30,A,European Commission price of CBAM certificates page (IR (EU) 2025/2548),Q2 2026 weighted average of EUA auction clearing prices; published 6 Jul 2026
+cbam_price,EU,82.32,EUR/tCO2,2026-07-01,2026-09-30,A,European Commission price of CBAM certificates page (IR (EU) 2025/2548),Q3 2026 weighted average of EUA auction clearing prices; published 5 Oct 2026; weekly from 2027
 duty_ad_valorem,MFN:2814,0.055,share,2000-01-01,,A,Commission statements,Normal MFN rate ammonia
 duty_ad_valorem,MFN:3102.10,0.065,share,2000-01-01,,A,Commission statements,Normal MFN rate urea
 duty_ad_valorem,MFN:2814,0.0,share,2026-05-30,2027-05-31,A,Council Regulation (EU) 2026/1181 Art. 1 and 4,Within the aggregate quota in the Annex; excludes RU/BY

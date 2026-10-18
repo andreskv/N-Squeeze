@@ -16,3 +16,6 @@ amendments:   # each file stays private; the commit that adds its hash dates it
   - file: PREREGISTRATION-amendment-1.md
     sha256: f153c4db12c93c1e7c559ebd838efaecfd463f8a2fc0ef118380b678f327df4d
     frozen_at: 2026-10-18
+  - file: PREREGISTRATION-amendment-2.md
+    sha256: 5cfdd199fc806b4c036ac5e4f0664f4ea6db2fc01826cf0a09488420848459b7
+    frozen_at: 2026-10-18

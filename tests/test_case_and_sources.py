@@ -216,3 +216,16 @@ def test_comext_unit_value_is_euros_per_tonne():
     assert uv.loc["2026-01-01", "unit_value_eur_t"] == pytest.approx(
         400.0
     )  # the partner row is ignored
+
+
+def test_cbam_import_cost_prices_own_exempt_and_generic_origins():
+    tonnes = pd.DataFrame(
+        {"EXT_EU27_2020": [100.0], "TT": [10.0], "NO": [20.0], "CN": [5.0]},
+        index=pd.DatetimeIndex(["2026-02-01"], name="month"),
+    )
+    est = cn.cbam_import_cost(tonnes, "2814")
+    row = est.value.iloc[0]
+    tt = (2.420 * 1.01 - 1.522 * 0.975) * 75.36
+    generic = (3.130 * 1.01 - 1.522 * 0.975) * 75.36
+    assert (row.own_t, row.exempt_t, row.generic_t) == (10.0, 20.0, 70.0)  # NO pays nothing
+    assert row.total_eur == pytest.approx(10 * tt + 70 * generic)

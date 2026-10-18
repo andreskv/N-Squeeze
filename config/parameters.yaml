@@ -131,6 +131,11 @@ cbam:
     grade: A
     source: IR (EU) 2025/2621 Annex I as corrected by IR (EU) 2026/1740 - 1 % for 2026 and onwards
     url: https://eur-lex.europa.eu/eli/reg_impl/2026/1740/oj/eng
+  exempt_origins:
+    value: ["IS", "LI", "NO", "CH"]  # quoted: YAML reads a bare NO as false
+    grade: A
+    source: Regulation (EU) 2023/956 Art. 2(4) and Annex III point 1 (goods from Iceland, Liechtenstein, Norway, Switzerland)
+    url: https://eur-lex.europa.eu/eli/reg/2023/956/oj/eng
   benchmark_ammonia:
     value: 1.522
     unit: tCO2e/t_NH3

@@ -27,6 +27,11 @@ def test_origin_without_a_country_row_uses_other_countries(ip):
     assert est.value == pytest.approx((3.130 * 1.01 - 1.522 * 0.975) * 82.32, abs=0.1)
 
 
+@pytest.mark.parametrize("on, price", [("2026-02-15", 75.36), ("2026-05-15", 75.28)])
+def test_first_half_2026_uses_the_published_quarterly_price(ip, on, price):
+    assert ip.cbam("TT", on).value == pytest.approx((2.420 * 1.01 - 1.522 * 0.975) * price)
+
+
 def test_cbam_price_outside_published_quarter_must_be_supplied(ip):
     with pytest.raises(NoRuleInForce):
         ip.cbam("TT", "2027-03-01")  # no quarterly price recorded yet

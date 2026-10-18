@@ -28,9 +28,10 @@ import pandas as pd
 
 from nsqueeze import units
 from nsqueeze.freeze import load_episodes, sealed_after
+from nsqueeze.import_parity import ORIGINS, ImportParity
 from nsqueeze.io.pit import PITStore
 from nsqueeze.params import ParameterSet
-from nsqueeze.provenance import Provenance
+from nsqueeze.provenance import Estimate, Provenance
 
 START = pd.Timestamp("2015-04-01")  # Pink Sheet "Natural gas, Europe" = TTF from here
 UREA_ORIGIN_BREAK = pd.Timestamp("2022-03-01")
@@ -157,6 +158,57 @@ def comext_unit_value(store: PITStore, product: str = "310210", *, as_of=None) -
     out = pd.DataFrame({"unit_value_eur_t": val / qty_t, "tonnes": qty_t}).dropna()
     out.index.name = "month"
     return out
+
+
+def comext_partner_tonnes(store: PITStore, product: str, *, as_of=None) -> pd.DataFrame:
+    """EU-27 imports of ``product`` by partner, t. Month-start index, one column per partner."""
+    df = store.read("comext", as_of=as_of)
+    part = df.series_id.str.split(".")
+    q = df[(part.str[3] == product) & (part.str[5] == "QUANTITY_IN_100KG")]
+    wide = q.assign(partner=part.str[4]).pivot_table(
+        index="observed_at", columns="partner", values="value", aggfunc="last"
+    )
+    wide.index.name = "month"
+    return wide * 0.1
+
+
+def cbam_import_cost(
+    tonnes: pd.DataFrame, product_cn: str, ip: ImportParity | None = None
+) -> Estimate[pd.DataFrame]:
+    """Monthly CBAM cost, €, of the extra-EU imports in ``tonnes`` (from ``comext_partner_tonnes``).
+
+    Origins with their own default values pay those, exempt origins pay nothing, and the
+    rest of the extra-EU total pays the "other countries" values, at the rules of mid-month.
+    """
+    ip = ip or ImportParity()
+    exempt_p = ip.P["cbam.exempt_origins"]
+    t = tonnes.fillna(0.0)
+    own = [c for c in ORIGINS if c in t]
+    exempt = [c for c in exempt_p.value if c in t]
+    generic_t = t["EXT_EU27_2020"] - t[own + exempt].sum(axis=1)
+    prov = Provenance.of(exempt_p.ref)
+    rows = []
+    for month, row in t.iterrows():
+        on = (month + pd.Timedelta(days=14)).date()
+        own_eur = 0.0
+        for c in own:
+            est = ip.cbam(c, on, product_cn=product_cn)
+            own_eur += row[c] * est.value
+            prov |= est.provenance
+        gen = ip.cbam("generic", on, product_cn=product_cn)
+        prov |= gen.provenance
+        rows.append(
+            {
+                "own_t": row[own].sum(),
+                "exempt_t": row[exempt].sum(),
+                "generic_t": generic_t[month],
+                "own_eur": own_eur,
+                "generic_eur": generic_t[month] * gen.value,
+            }
+        )
+    out = pd.DataFrame(rows, index=t.index)
+    out["total_eur"] = out.own_eur + out.generic_eur
+    return Estimate(out, prov)
 
 
 def comext_parity_band(uv: pd.Series, P: ParameterSet) -> pd.DataFrame:
