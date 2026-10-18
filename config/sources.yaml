@@ -6,7 +6,7 @@
 
 agsi:
   name: GIE AGSI+ gas storage
-  layer: L1
+  layer: gas_storage_model
   portal: https://agsi.gie.eu
   frequency: daily
   auth: { env: AGSI_API_KEY, header: x-key }
@@ -16,7 +16,7 @@ agsi:
 
 alsi:
   name: GIE ALSI+ LNG terminals
-  layer: L1
+  layer: gas_storage_model
   portal: https://alsi.gie.eu
   frequency: daily
   auth: { env: AGSI_API_KEY, header: x-key }
@@ -28,7 +28,7 @@ alsi:
 
 entsog:
   name: ENTSOG Transparency Platform
-  layer: L1
+  layer: gas_storage_model
   portal: https://transparency.entsog.eu
   frequency: daily
   auth: none
@@ -41,7 +41,7 @@ entsog:
 
 entsoe:
   name: ENTSO-E generation by fuel
-  layer: L1
+  layer: gas_storage_model
   portal: https://transparency.entsoe.eu
   frequency: hourly
   auth: { env: ENTSOE_TOKEN }
@@ -52,7 +52,7 @@ entsoe:
 
 weather:
   name: Open-Meteo historical API (ERA5), daily Tmax/Tmin at one point per EU-27 country
-  layer: L1
+  layer: gas_storage_model
   portal: https://open-meteo.com
   frequency: daily
   auth: none
@@ -64,7 +64,7 @@ weather:
 
 henry_hub:
   name: EIA Henry Hub daily spot (RNGWHHD)
-  layer: L2
+  layer: nitrogen_cost_model
   portal: https://www.eia.gov/opendata/
   frequency: daily
   auth: { env: EIA_API_KEY }
@@ -74,7 +74,7 @@ henry_hub:
 
 ecb_fx:
   name: ECB euro reference rate USD/EUR
-  layer: L2
+  layer: nitrogen_cost_model
   portal: https://data.ecb.europa.eu
   frequency: daily
   auth: none
@@ -84,7 +84,7 @@ ecb_fx:
 
 eua_auctions:
   name: EEX EUA primary-auction results (2012 → today)
-  layer: L2
+  layer: nitrogen_cost_model
   portal: https://www.eex.com/en/market-data/market-data-hub/environmentals/eex-eua-primary-auction-spot-download
   frequency: daily (auction days)
   auth: none
@@ -95,7 +95,7 @@ eua_auctions:
 
 pink_sheet_monthly:
   name: World Bank Pink Sheet, monthly (Henry Hub, Europe gas/TTF, Japan LNG, urea, DAP)
-  layer: L2
+  layer: nitrogen_cost_model
   portal: https://www.worldbank.org/en/research/commodity-markets
   url: https://thedocs.worldbank.org/en/doc/74e8be41ceb20fa0da750cda2f6b9e4e-0050012026/related/CMO-Historical-Data-Monthly.xlsx
   frequency: monthly
@@ -112,7 +112,7 @@ pink_sheet_monthly:
 
 ttf_daily_candidate:
   name: Candidate daily TTF, Yahoo Finance TTF=F front-month close (EUR/MWh), from 2017-10-23
-  layer: L2
+  layer: nitrogen_cost_model
   frequency: daily
   auth: none
   grade: B    # passed the monthly reconciliation test on 2026-10-15 (98 of 98 months within 3 %)
@@ -122,7 +122,7 @@ ttf_daily_candidate:
 
 comext:
   name: Eurostat Comext imports by origin (CN 2814, 3102 10)
-  layer: L4
+  layer: shipping_and_trade
   portal: https://ec.europa.eu/eurostat/comext/newxtweb/
   api: https://ec.europa.eu/eurostat/api/comext/dissemination/statistics/1.0/data/DS-045409
   scope: reporter EU27_2020, all partners, products 2814 and 310210, imports, tonnes and euros
@@ -134,18 +134,18 @@ comext:
 
 ets_registry:
   name: EU ETS verified emissions per stationary installation, 2008 onward (Commission Union Registry file verified_emissions_<year>_en.xlsx)
-  layer: L2
+  layer: nitrogen_cost_model
   frequency: annual (published in April; the latest file holds all years)
   auth: none
   grade: A
-  role: G1 test 4 (ETS-implied output vs capacity); main activity 41 = ammonia, 38 = nitric acid
+  role: annual output test (ETS-implied output vs capacity); main activity 41 = ammonia, 38 = nitric acid
   recoverable: true
   verified: true   # 2025 file parsed 2026-10-14; 13,414 installations, tCO2e
   phase: 1
 
 gem_plants:
   name: Global Energy Monitor — Global Chemicals Inventory (ammonia plants)
-  layer: L2
+  layer: nitrogen_cost_model
   portal: https://www.gem.wiki
   frequency: static
   licence: check
@@ -155,7 +155,7 @@ gem_plants:
 
 portwatch:
   name: IMF PortWatch chokepoint transits (Hormuz)
-  layer: L4
+  layer: shipping_and_trade
   portal: https://portwatch.imf.org
   frequency: daily
   auth: none
@@ -168,7 +168,7 @@ portwatch:
 
 wto_hormuz:
   name: WTO Strait of Hormuz Trade Tracker
-  layer: L4
+  layer: shipping_and_trade
   portal: https://datalab.wto.org/Strait-of-Hormuz-Trade-Tracker
   frequency: weekly
   auth: none
@@ -178,7 +178,7 @@ wto_hormuz:
 
 aisstream:
   name: aisstream.io live terrestrial AIS
-  layer: L4
+  layer: shipping_and_trade
   portal: https://aisstream.io
   frequency: streaming
   auth: { env: AISSTREAM_API_KEY }
@@ -188,7 +188,7 @@ aisstream:
 
 eurostat_population:
   name: Eurostat population on 1 January (demo_pjan), EU-27 countries
-  layer: L1
+  layer: gas_storage_model
   frequency: annual
   auth: none
   grade: A
@@ -199,7 +199,7 @@ eurostat_population:
 
 eurostat_hdd:
   name: Eurostat heating degree days by country, monthly (nrg_chdd_m; JRC data)
-  layer: L1
+  layer: gas_storage_model
   frequency: monthly
   auth: none
   grade: A
@@ -210,7 +210,7 @@ eurostat_hdd:
 
 eurostat_hdd_nuts2:
   name: Eurostat heating degree days by NUTS-2 region, monthly (nrg_chddr2_m; JRC data)
-  layer: L1
+  layer: gas_storage_model
   frequency: monthly
   auth: none
   grade: A
@@ -221,7 +221,7 @@ eurostat_hdd_nuts2:
 
 eurostat_population_nuts2:
   name: Eurostat population on 1 January by NUTS-2 region (demo_r_d2jan)
-  layer: L1
+  layer: gas_storage_model
   frequency: annual
   auth: none
   grade: A
@@ -232,7 +232,7 @@ eurostat_population_nuts2:
 
 s2_swir:
   name: Sentinel-2 L1C SWIR statistics in a box around each ammonia plant, per scene (Google Earth Engine)
-  layer: L3
+  layer: plant_activity_index
   frequency: per scene (about 5 days)
   auth: GEE_PROJECT + earthengine authenticate
   grade: B
@@ -243,7 +243,7 @@ s2_swir:
 
 eurostat_gas_trade:
   name: Eurostat EU-27 gas imports and exports by partner, monthly (nrg_ti_gasm, nrg_te_gasm)
-  layer: L1
+  layer: gas_storage_model
   frequency: monthly
   auth: none
   grade: A

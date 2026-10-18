@@ -84,13 +84,13 @@ def test_fit_recovers_regime_coefficients():
     assert c.alpha_post - c.alpha_pre == pytest.approx(-1.0, abs=0.1)
 
 
-def test_backcast_and_g2_gate():
+def test_backcast_and_storage_backtest_verdict():
     f = _synthetic()
     bc = gb.backcast(f, list(range(2016, 2025)), start_md=(10, 1), end_md=(4, 1))
     assert len(bc) == 9 and {"error_pp", "predicted_pct"} <= set(bc.columns)
-    r = gb.g2_gate(bc, mae_limit_pp=5.0, max_limit_pp=10.0)
+    r = gb.storage_backtest_verdict(bc, mae_limit_pp=5.0, max_limit_pp=10.0)
     assert r.passed and r.winters == 9
-    assert not gb.g2_gate(bc, mae_limit_pp=0.0, max_limit_pp=0.0).passed
+    assert not gb.storage_backtest_verdict(bc, mae_limit_pp=0.0, max_limit_pp=0.0).passed
 
 
 def test_backcast_with_power_burn_and_missing_day():

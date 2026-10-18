@@ -155,7 +155,7 @@ def monte_carlo(e2: pd.DataFrame, e3n: pd.DataFrame, e3p: pd.DataFrame, e4: pd.D
 
 
 def framework_diagram():
-    """Figure 1: physical state → model → prediction; measurement → surprise → four gates."""
+    """Figure 1: physical state → model → prediction; measurement → surprise → four conditions."""
     import matplotlib.pyplot as plt
     from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
 
@@ -220,7 +220,7 @@ def framework_diagram():
         )
 
         for i, g in enumerate(
-            ["G1 measurement", "G2 information", "G3 price impact", "G4 tradability"]
+            ["1 Measurement", "2 Information", "3 Price impact", "4 Tradability"]
         ):
             y = 3.3 - i * 0.92
             box(11.0, y, 2.35, 0.6, g, lw=0.6, fc="#f6f6f6")
@@ -230,7 +230,7 @@ def framework_diagram():
         ax.text(
             12.175,
             0.08,
-            "failure at any gate is reported",
+            "a failed condition is reported",
             ha="center",
             fontsize=6.6,
             color=GREY,

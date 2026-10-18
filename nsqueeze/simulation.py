@@ -2,13 +2,13 @@
 
 Each experiment puts one claim of the rigour protocol to a test where the truth is known:
 
-E1  Measurement   An estimator can track *levels* well and still fail on *changes*.
-E2  Nulls         With autocorrelated series and no true link, naive permutation tests
-                  over-reject; circular-shift placebos hold their nominal size.
-E3  Selection     The best of N zero-skill strategies looks significant; the deflated
-                  Sharpe ratio restores the nominal false-positive rate.
-E4  Few events    When a regime effect arrives as a handful of episodes, i.i.d. OLS
-                  t-statistics over-reject; episode-clustered inference does not.
+Levels vs changes        An estimator can track *levels* well and still fail on *changes*.
+Nulls under persistence  With autocorrelated series and no true link, naive permutation tests
+                                over-reject; circular-shift placebos hold their nominal size.
+Specification search     The best of N zero-skill strategies looks significant; the deflated
+                         Sharpe ratio restores the nominal false-positive rate.
+Few independent events   When a regime effect arrives as a handful of episodes, i.i.d. OLS
+                         t-statistics over-reject; episode-clustered inference does not.
 
 All experiments are seeded and vectorised.
 """
@@ -44,10 +44,10 @@ def _rowcorr(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     return (a * b).sum(-1) / np.sqrt((a * a).sum(-1) * (b * b).sum(-1))
 
 
-# ── E1 · levels flatter, changes decide ──────────────────────────────────────
+# ── Levels vs changes: levels flatter, changes decide ──────────────────────────────────────
 
 
-def e1_levels_vs_changes(
+def levels_vs_changes(
     noise_ratios=(0.1, 0.25, 0.5, 1.0, 2.0, 4.0, 8.0),
     *,
     n_paths: int = 500,
@@ -83,10 +83,10 @@ def e1_levels_vs_changes(
     return pd.DataFrame(rows)
 
 
-# ── E2 · size of permutation vs circular-shift nulls ─────────────────────────
+# ── Nulls under persistence: size of permutation vs circular-shift nulls ─────────────────────────
 
 
-def e2_null_size(
+def nulls_under_persistence(
     phis=(0.0, 0.5, 0.8, 0.9, 0.95),
     *,
     n_mc: int = 400,
@@ -126,10 +126,10 @@ def e2_null_size(
     return pd.DataFrame(rows)
 
 
-# ── E3 · selection bias and the deflated Sharpe ratio ────────────────────────
+# ── Specification search: selection bias and the deflated Sharpe ratio ────────────────────────
 
 
-def e3_selection(
+def specification_search(
     n_trials_grid=(1, 5, 20, 100, 500),
     *,
     n_mc: int = 400,
@@ -175,10 +175,10 @@ def e3_selection(
     return pd.DataFrame(rows)
 
 
-# ── E4 · few independent events ──────────────────────────────────────────────
+# ── Few independent events ──────────────────────────────────────────────
 
 
-def e4_few_events(
+def few_independent_events(
     n_episodes_grid=(2, 4, 8, 16, 32),
     *,
     n_mc: int = 300,
@@ -227,9 +227,9 @@ def e4_few_events(
 
 def run_all(seed: int = SEED) -> dict[str, pd.DataFrame]:
     return {
-        "e1": e1_levels_vs_changes(seed=seed),
-        "e2": e2_null_size(seed=seed),
-        "e3_null": e3_selection(seed=seed),
-        "e3_power": e3_selection(true_sharpe_annual=1.0, seed=seed),
-        "e4": e4_few_events(seed=seed),
+        "levels_vs_changes": levels_vs_changes(seed=seed),
+        "nulls_under_persistence": nulls_under_persistence(seed=seed),
+        "specification_search_null": specification_search(seed=seed),
+        "specification_search_power": specification_search(true_sharpe_annual=1.0, seed=seed),
+        "few_independent_events": few_independent_events(seed=seed),
     }

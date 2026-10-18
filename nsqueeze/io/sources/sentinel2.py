@@ -7,7 +7,7 @@ the GEM coordinates in ``config/plants.csv``; plants without coordinates are ski
 
 I store raw statistics only. The archive applies no hot-spot threshold, so detection rules
 are chosen later and in the open. Steam plumes can look like clouds, so the clear
-fraction (Cloud Score+ ``cs_cdf`` at or above ``eaui.s2_clear_cs_cdf``) is a separate
+fraction (Cloud Score+ ``cs_cdf`` at or above ``plant_activity.s2_clear_cs_cdf``) is a separate
 statistic and masks nothing.
 
 NHI_SWIR = (B12 - B11) / (B12 + B11), a normalized hot-spot index on the two SWIR bands.
@@ -96,8 +96,8 @@ class Sentinel2SWIR(Source):
 
         ee.Initialize(project=self.api_key)
         P = ParameterSet.load()
-        radius = float(P.value("eaui.s2_box_radius_m"))
-        clear = float(P.value("eaui.s2_clear_cs_cdf"))
+        radius = float(P.value("plant_activity.s2_box_radius_m"))
+        clear = float(P.value("plant_activity.s2_clear_cs_cdf"))
         cs = ee.ImageCollection(CLOUD_SCORE)
         frames = []
         for r in plants_with_coordinates().itertuples():

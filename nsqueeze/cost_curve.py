@@ -19,6 +19,7 @@ import numpy as np
 import pandas as pd
 
 from nsqueeze import cost_stack as cs
+from nsqueeze import units
 
 
 @dataclass(frozen=True)
@@ -28,7 +29,9 @@ class Plant:
     country: str
     capacity_kt: float
     energy_gj_lhv: float = 35.7  # no plant-level evidence yet, so every plant gets the EU average
-    integrated_downstream: bool = False  # values NH3 at downstream netback; flag only in Phase 1
+    integrated_downstream: bool = (
+        False  # values NH3 at downstream netback; flag only in the nitrogen cost model phase
+    )
     ets_scope: str = "EU"  # "UK" plants need UK gas & carbon prices — never mix into the EU curve
     lat: float | None = None
     lon: float | None = None
@@ -58,8 +61,8 @@ def cost_curve(
     ttf: float,
     eua: float,
     other: float = 0.0,
-    hhv_over_lhv: float = 1.108,
-    ef: float = 56.1,
+    ef: float,
+    hhv_over_lhv: float = units.HHV_OVER_LHV_GAS,
 ) -> pd.DataFrame:
     """Merit-order snapshot: one row per EU-ETS plant, sorted by marginal cash cost (κ = 1)."""
     rows = []

@@ -4,7 +4,7 @@ EU gas balance nowcast and end-of-winter fan chart.
 
     ΔS_t = (N_t + L_t + P_t) − (β_HDD · HDD_t + G_t + I_t) + ε_t
            Norway, LNG send-out,   weather demand, power burn,
-           other pipeline          industry (← EAUI feeds back here)
+           other pipeline          industry (← plant activity index feeds back here)
 
 Estimation works on implied consumption D_t ≡ supply_t − ΔS_t:
 
@@ -385,7 +385,8 @@ def power_generation(entsoe: pd.DataFrame) -> pd.DataFrame:
 
 
 # EU countries with ENTSO-E gas-fired generation from January 2015 (ENTSO-E codes).
-# BG starts 2017, HR 2019, SE Dec 2021, CY Oct 2025, MT has no data. Fixed for G2-b.
+# BG starts 2017, HR 2019, SE Dec 2021, CY Oct 2025, MT has no data.
+# Fixed for the storage back-test with power demand.
 POWER_PANEL = tuple(sorted(EU27_ENTSOG - {"BG", "HR", "SE", "CY", "MT"}))
 
 
@@ -427,7 +428,7 @@ def layer1_inputs(store, as_of=None, *, power: bool = False) -> pd.DataFrame:
     """Read every Layer 1 input from the PIT store (as known at ``as_of``) into one frame.
 
     Supply uses the boundary classes plus ``config/entsog_landing_points.csv`` and
-    ``config/entsog_archive_points.csv``, as in the OI-26 checks.
+    ``config/entsog_archive_points.csv``, as in the supply completeness checks.
     """
     from nsqueeze.config import config_dir
 
@@ -468,7 +469,7 @@ def _design(index: pd.DatetimeIndex, hdd: np.ndarray, post: np.ndarray, extra=No
 
 @dataclass
 class BalanceModel:
-    """Daily balance identity with a structural break. Phase 2."""
+    """Daily balance identity with a structural break (gas storage model)."""
 
     break_date: dt.date = dt.date(2022, 3, 1)
     coef_: np.ndarray | None = None
@@ -662,7 +663,8 @@ def backcast(
     For each winter the model is fitted on every other day in ``frame`` (the winter
     itself is excluded), then the storage path is rebuilt from the observed start.
     A winter with a missing day is left out (missing). Errors are in percentage points
-    of working-gas volume. ``power=True`` adds the ``power_burn`` column (G2-b).
+    of working-gas volume. ``power=True`` adds the ``power_burn`` column
+    (storage back-test with power demand).
     """
     f = frame.copy()
     f["dS"] = f.storage.diff()
@@ -697,7 +699,7 @@ def backcast(
 
 
 @dataclass(frozen=True)
-class G2Result:
+class StorageBacktestResult:
     passed: bool
     mae_pp: float
     max_abs_pp: float
@@ -706,10 +708,12 @@ class G2Result:
     winters: int
 
 
-def g2_gate(bc: pd.DataFrame, *, mae_limit_pp: float, max_limit_pp: float) -> G2Result:
+def storage_backtest_verdict(
+    bc: pd.DataFrame, *, mae_limit_pp: float, max_limit_pp: float
+) -> StorageBacktestResult:
     """Limits are passed in by the caller, never defaulted."""
     err = bc.error_pp.abs()
     mae, mx = float(err.mean()), float(err.max())
-    return G2Result(
+    return StorageBacktestResult(
         mae <= mae_limit_pp and mx <= max_limit_pp, mae, mx, mae_limit_pp, max_limit_pp, len(bc)
     )

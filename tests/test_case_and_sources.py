@@ -1,4 +1,4 @@
-"""Phase 1 case-study logic and the World Bank / EEX parsers, on synthetic inputs (no network)."""
+"""Nitrogen cost model case study and the World Bank / EEX parsers, on synthetic data."""
 
 import io
 
@@ -145,11 +145,11 @@ def test_eex_parser_filters_and_volume_weights():
 
 
 def test_simulation_smoke():
-    e2 = sim.e2_null_size(phis=(0.9,), n_mc=60, n_null=49, t=300, min_offset=40)
+    e2 = sim.nulls_under_persistence(phis=(0.9,), n_mc=60, n_null=49, t=300, min_offset=40)
     assert e2.reject_naive.iloc[0] > e2.reject_circular.iloc[0]
-    e1 = sim.e1_levels_vs_changes(noise_ratios=(2.0,), n_paths=50)
+    e1 = sim.levels_vs_changes(noise_ratios=(2.0,), n_paths=50)
     assert e1.level_corr.iloc[0] > 0.9 and e1.change_snr.iloc[0] < 1
-    e4 = sim.e4_few_events(n_episodes_grid=(2, 16), n_mc=40)
+    e4 = sim.few_independent_events(n_episodes_grid=(2, 16), n_mc=40)
     assert np.isnan(e4.reject_clustered.iloc[0])
 
 

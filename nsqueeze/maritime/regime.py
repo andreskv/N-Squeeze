@@ -26,7 +26,7 @@ class Regime(StrEnum):
 
 @dataclass(frozen=True)
 class RegimeRule:
-    """Pre-registered thresholds. Values are filled in PREREGISTRATION.md, not here."""
+    """Pre-registered thresholds. The values are in ``config/parameters.yaml`` (``regime``)."""
 
     transit_ratio_shock: float  # transits / baseline below this → chokepoint shock
     gas_spread_stress: float  # TTF − HH (€/MWh) above this → EU gas stress

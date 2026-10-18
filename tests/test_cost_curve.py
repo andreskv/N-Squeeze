@@ -3,6 +3,9 @@ import pandas as pd
 import pytest
 
 from nsqueeze.cost_curve import Plant, cost_curve, predicted_utilisation, realised_price
+from nsqueeze.params import ParameterSet
+
+EF = ParameterSet.load().value("carbon.gas_emission_factor")
 
 # Synthetic plants — test fixtures only, not a plant universe.
 PLANTS = [
@@ -14,7 +17,7 @@ PLANTS = [
 
 
 def test_curve_is_sorted_and_excludes_uk():
-    c = cost_curve(PLANTS, ttf=50, eua=80)
+    c = cost_curve(PLANTS, ttf=50, eua=80, ef=EF)
     assert list(c.plant_id) == ["A", "C", "B"]
     assert c.cash_cost.is_monotonic_increasing
     assert c.cum_capacity_kt.iloc[-1] == 2300

@@ -8,8 +8,8 @@ from nsqueeze.freeze import FreezeState, HoldoutLocked
 from nsqueeze.params import ParameterSet
 
 
-def test_t1_arithmetic_passes_on_graded_h():
-    r = v.t1_arithmetic(ParameterSet.load(), rel_tol=0.01)
+def test_gas_intensity_check_passes_on_graded_h():
+    r = v.gas_intensity_check(ParameterSet.load(), rel_tol=0.01)
     assert r.status == "pass" and r.value < 0.01
 
 
@@ -17,9 +17,9 @@ def test_blocked_and_sealed_tests_say_why(monkeypatch):
     monkeypatch.setattr(
         FreezeState, "load", classmethod(lambda cls, path=None: cls(False, None, None))
     )
-    assert v.t4_annual_levels().status == "blocked"
+    assert v.annual_output_test().status == "blocked"
     with pytest.raises(HoldoutLocked):
-        v.t6_cbam_sanity()
+        v.cbam_cost_check()
 
 
 def test_trade_response_detects_lagged_rise():
@@ -41,10 +41,10 @@ def test_t5_placebo_passes_real_lag_and_fails_noise():
     for i in sig.to_numpy().nonzero()[0]:
         if i + 2 < 120:
             imp.iloc[i + 2 :] *= 1.3  # imports step up two months after each signal
-    assert v.t5_trade_response(sig, imp, alpha=0.10, min_offset_months=12).status == "pass"
+    assert v.import_response_test(sig, imp, alpha=0.10, min_offset_months=12).status == "pass"
     # On pure noise the test must pass about alpha of the time, not never and not often.
     passes = [
-        v.t5_trade_response(
+        v.import_response_test(
             sig, pd.Series(rng.random(120) + 1, index=idx), alpha=0.10, min_offset_months=12
         ).status
         == "pass"

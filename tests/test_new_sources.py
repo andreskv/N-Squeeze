@@ -1,4 +1,4 @@
-"""Parsers for the Phase 0 fetchers added on 2026-10-12 (no network)."""
+"""Parsers for the data-archive fetchers added on 2026-10-12 (no network)."""
 
 import json
 

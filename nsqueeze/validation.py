@@ -1,13 +1,13 @@
-"""Cost-stack validation tests.
+"""Cost model validation: six tests.
 
 Each test returns a :class:TestResult.
 
-    1 arithmetic        h reproduces CF's $32–33/short ton per $1/MMBtu
-    2 point calibration EU gas cost of a tonne of NH3, Sep 2021, vs CF's CEO quote ($900)
-    3 onset timing      signal crosses within ± tolerance of each documented onset
-    4 annual levels     ETS-implied output vs capacity × mean U_pred
-    5 trade response    falls in U_pred → rising Comext ammonia imports, lag 1–3 months
-    6 CBAM sanity       2026 imports × CBAM vs Copa-Cogeca's €820m       (hold-out: frozen only)
+    1 gas-intensity check     h reproduces CF's $32–33/short ton per $1/MMBtu
+    2 2021 cost check         EU gas cost of a tonne of NH3, Sep 2021, vs CF's CEO quote ($900)
+    3 curtailment timing test signal crosses within ± tolerance of each documented onset
+    4 annual output test      ETS-implied output vs capacity × mean U_pred
+    5 import response test    falls in U_pred → rising Comext ammonia imports, lag 1–3 months
+    6 CBAM cost check         2026 imports × CBAM vs Copa-Cogeca's €820m (after the freeze)
 """
 
 from __future__ import annotations
@@ -39,7 +39,7 @@ class TestResult:
     note: str = ""
 
 
-def t1_arithmetic(P: ParameterSet, *, rel_tol: float) -> TestResult:
+def gas_intensity_check(P: ParameterSet, *, rel_tol: float) -> TestResult:
     lo, hi = P["us_cost.h_cf_mmbtu_per_t"].range
     implied = [units.per_t_to_per_short_ton(h) for h in (lo, hi)]
     err = max(
@@ -47,7 +47,7 @@ def t1_arithmetic(P: ParameterSet, *, rel_tol: float) -> TestResult:
     )
     return TestResult(
         1,
-        "arithmetic",
+        "gas-intensity check",
         "pass" if err <= rel_tol else "fail",
         "max relative error",
         err,
@@ -55,14 +55,14 @@ def t1_arithmetic(P: ParameterSet, *, rel_tol: float) -> TestResult:
     )
 
 
-def t2_point_calibration(
+def cost_check_2021(
     panel: pd.DataFrame, P: ParameterSet, *, rel_tol: float, tier: str = "eu_average"
 ) -> TestResult:
     out = cn.point_calibration_sep2021(panel, P)
     err = out[tier] / CF_CEO_GAS_COST_SEP2021_USD_T - 1
     return TestResult(
         2,
-        "point calibration",
+        "2021 cost check",
         "pass" if abs(err) <= rel_tol else "fail",
         f"{tier} vs ${CF_CEO_GAS_COST_SEP2021_USD_T:.0f}/t",
         err,
@@ -71,13 +71,13 @@ def t2_point_calibration(
     )
 
 
-def t3_onset_timing(signal: pd.Series, *, tolerance_months: int) -> TestResult:
+def curtailment_timing_test(signal: pd.Series, *, tolerance_months: int) -> TestResult:
     """Monthly data cannot resolve ±4 weeks; ±1 month is the nearest testable window."""
     sc = cn.score_onsets(signal, tolerance_months=tolerance_months)
     hits = int(sc.hit.sum())
     return TestResult(
         3,
-        "onset timing",
+        "curtailment timing test",
         "pass" if hits == len(sc) else "fail",
         "episode clusters hit",
         hits,
@@ -86,10 +86,10 @@ def t3_onset_timing(signal: pd.Series, *, tolerance_months: int) -> TestResult:
     )
 
 
-def t4_annual_levels(*_, **__) -> TestResult:
+def annual_output_test(*_, **__) -> TestResult:
     return TestResult(
         4,
-        "annual levels",
+        "annual output test",
         "blocked",
         note="Needs U_pred; the softness s is not identified by the episode record",
     )
@@ -121,7 +121,7 @@ def _max_lagged_corr(lags):
     return stat
 
 
-def t5_trade_response(
+def import_response_test(
     signal: pd.Series,
     imports_t: pd.Series,
     *,
@@ -145,7 +145,7 @@ def t5_trade_response(
     ok = res.observed > 0 and res.p_value <= alpha
     return TestResult(
         5,
-        "trade response",
+        "import response test",
         "pass" if ok else "fail",
         "max corr over lags 1-3 (placebo p)",
         res.observed,
@@ -154,10 +154,10 @@ def t5_trade_response(
     )
 
 
-def t6_cbam_sanity(*_, **__) -> TestResult:
+def cbam_cost_check(*_, **__) -> TestResult:
     require_frozen()  # 2026 import volumes are hold-out data
     raise NotImplementedError(
-        "CBAM sanity runs after the freeze, once the CBAM default values are verified"
+        "CBAM cost check: allowed now that the freeze is in place; not built yet"
     )
 
 
@@ -181,7 +181,7 @@ EXCLUDE_PARTNERS = frozenset(
 
 
 def reconcile_monthly(daily: pd.Series, monthly: pd.Series, *, tolerance: float) -> pd.DataFrame:
-    """Calendar-month mean of a daily series vs an official monthly series (ADR-0004).
+    """Calendar-month mean of a daily series vs an official monthly series.
 
     Both in the same unit. ``monthly`` is indexed by the first day of the month. Only
     months that both series cover are compared. The series passes if every month is

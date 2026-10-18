@@ -2,12 +2,12 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from nsqueeze.eaui import eaui
-from nsqueeze.evaluation.gates import Gate, GateResult, SignalReport
+from nsqueeze.evaluation.conditions import Condition, ConditionResult, SignalReport
 from nsqueeze.evaluation.measurement import change_snr
 from nsqueeze.evaluation.nulls import block_bootstrap_ci, circular_shift_placebo
 from nsqueeze.evaluation.tradability import deflated_sharpe, expected_max_sharpe
 from nsqueeze.maritime.cfar import ca_cfar, count_vessels
+from nsqueeze.plant_activity import plant_activity_index
 
 
 def test_snr_punishes_level_trackers_with_noisy_changes():
@@ -19,7 +19,7 @@ def test_snr_punishes_level_trackers_with_noisy_changes():
     noisy = truth + rng.normal(0, 15, 200)  # level error ≫ weekly change
     good = truth + rng.normal(0, 0.3, 200)
     assert noisy.corr(truth) > 0.85  # looks fine on levels…
-    assert change_snr(noisy, truth) < 1  # …but fails gate 1
+    assert change_snr(noisy, truth) < 1  # …but fails condition 1 (measurement)
     assert change_snr(good, truth) > 2
 
 
@@ -57,11 +57,11 @@ def test_block_bootstrap_interval_contains_mean():
 
 
 def test_gates_must_run_in_order_and_stop_on_failure():
-    rep = SignalReport("S3")
-    rep.record(GateResult(Gate.MEASUREMENT, False, "snr", 0.8, 1.0))
-    assert rep.stopped_at is Gate.MEASUREMENT
+    rep = SignalReport("Unexpected curtailment")
+    rep.record(ConditionResult(Condition.MEASUREMENT, False, "snr", 0.8, 1.0))
+    assert rep.stopped_at is Condition.MEASUREMENT
     with pytest.raises(ValueError):
-        rep.record(GateResult(Gate.INFORMATION, True, "ic", 0.2, 0.1))
+        rep.record(ConditionResult(Condition.INFORMATION, True, "ic", 0.2, 0.1))
 
 
 def test_cfar_finds_a_ship_on_sea_clutter():
@@ -79,7 +79,7 @@ def test_cfar_guard_smaller_than_hull_splits_the_target():
     assert count_vessels(ca_cfar(sea, guard=6, background=10), min_pixels=20) == 2
 
 
-def test_eaui_weights_by_capacity_and_ignores_missing():
+def test_plant_activity_index_weights_by_capacity_and_ignores_missing():
     p = pd.DataFrame({"A": [1.0, 1.0], "B": [0.0, np.nan]})
     cap = pd.Series({"A": 300.0, "B": 100.0})
-    assert eaui(p, cap).tolist() == pytest.approx([0.75, 1.0])
+    assert plant_activity_index(p, cap).tolist() == pytest.approx([0.75, 1.0])

@@ -1,18 +1,18 @@
 """
 N-Squeeze: Europe's gas-to-nitrogen chain.
 
-When European gas tightens, who wins and who loses in nitrogen? c
+When European gas tightens, who wins and who loses in nitrogen?
 Can physical data see it before prices and company announcements do?
 
-Layers
+Models
 ------
-L1  gas_balance      EU storage nowcast and end-of-winter fan chart
-L2  cost_stack       C_EU, C_US, urea conversion          (Phase 1)
-    import_parity    landed price by origin incl. CBAM    (Phase 1)
-    cost_curve       plant merit order and U_pred          (Phase 1)
-L3  eaui             satellite plant-utilisation index (HMM)
-L4  maritime         SAR berth counts, AIS, chokepoint regime R(t)
-    evaluation       the four rigour gates
+Gas storage model     gas_balance      EU storage nowcast and end-of-winter fan chart
+Nitrogen cost model   cost_stack       C_EU, C_US, urea conversion
+                      import_parity    landed price by origin incl. CBAM
+                      cost_curve       plant merit order and U_pred
+Plant activity index  plant_activity   satellite plant-utilisation index (HMM)
+Shipping and trade    maritime         SAR berth counts, AIS, chokepoint regime R(t)
+                      evaluation       the four conditions for a signal
 """
 
 from importlib.metadata import PackageNotFoundError, version

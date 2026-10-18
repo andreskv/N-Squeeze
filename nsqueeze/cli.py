@@ -110,9 +110,12 @@ def _figures(a: argparse.Namespace) -> int:
     out = REPO_ROOT / "docs" / "assets"
     paper.cost_parity(panel, band, cost, onsets).savefig(out / "fig-cost-parity.png", dpi=200)
     s_ = sim.run_all()
-    paper.monte_carlo(s_["e2"], s_["e3_null"], s_["e3_power"], s_["e4"]).savefig(
-        out / "fig-monte-carlo.png", dpi=200
-    )
+    paper.monte_carlo(
+        s_["nulls_under_persistence"],
+        s_["specification_search_null"],
+        s_["specification_search_power"],
+        s_["few_independent_events"],
+    ).savefig(out / "fig-monte-carlo.png", dpi=200)
     print("wrote docs/assets/fig-cost-parity.png, docs/assets/fig-monte-carlo.png")
     return 0
 

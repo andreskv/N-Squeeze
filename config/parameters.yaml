@@ -102,10 +102,10 @@ us_cost:
 
 cf_sensitivities_usd_per_short_ton_per_usd_mmbtu:
   # CF 10-K FY2023 — an audited, independent check on the whole conversion chain
-  ammonia:       { value: 32, grade: A }
-  granular_urea: { value: 22, grade: A }
-  uan_32:        { value: 14, grade: A }
-  an:            { value: 15, grade: A }
+  ammonia:       { value: 32, grade: A, source: CF Industries 10-K FY2023 }
+  granular_urea: { value: 22, grade: A, source: CF Industries 10-K FY2023 }
+  uan_32:        { value: 14, grade: A, source: CF Industries 10-K FY2023 }
+  an:            { value: 15, grade: A, source: CF Industries 10-K FY2023 }
 
 products:
   nh3_per_t_urea:
@@ -204,28 +204,28 @@ validation:
     unit: share of months
     grade: C
     basis: Pre-set 13 Oct 2026 - a bucket passes if at least this share of months 2016-2025 is within supply_bucket_tolerance
-  g2_mae_limit_pp:
+  storage_backtest_mae_limit_pp:
     value: 5
     unit: percentage points of working-gas volume
     grade: C
-    basis: Pre-set 14 Oct 2026, before any fit on AGSI+ data - G2 back-cast of EU storage on 1 April, winters ending 2016-2025, mean absolute error limit
-  g2_max_limit_pp:
+    basis: Pre-set 14 Oct 2026, before any fit on AGSI+ data - storage back-test of EU storage on 1 April, winters ending 2016-2025, mean absolute error limit
+  storage_backtest_max_limit_pp:
     value: 10
     unit: percentage points of working-gas volume
     grade: C
-    basis: Pre-set 14 Oct 2026, before any fit on AGSI+ data - G2 back-cast, no single winter may miss by more than this
+    basis: Pre-set 14 Oct 2026, before any fit on AGSI+ data - storage back-test, no single winter may miss by more than this
   onset_window_weeks:
     value: 4
     unit: weeks
     grade: C
     basis: Pre-set ± window for curtailment onset timing
-  eaui_auc_kill_threshold:
+  satellite_detection_auc_threshold:
     value: 0.75
     unit: AUC
     grade: C
     basis: Pre-set kill criterion for Layer 3
 
-eaui:
+plant_activity:
   s2_box_radius_m:
     value: 1000
     unit: m

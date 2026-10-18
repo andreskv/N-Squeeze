@@ -1,4 +1,4 @@
-"""Phase 1 case study: EU urea cash cost against import parity.
+"""Nitrogen cost model case study: EU urea cash cost against import parity.
 
 Pipeline:
 
