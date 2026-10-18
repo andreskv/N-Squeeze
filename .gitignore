@@ -48,9 +48,12 @@ docs/*
 docs/assets/*
 !docs/assets/fig-cost-parity.png
 !docs/assets/fig-monte-carlo.png
-paper/
+paper/*
+!paper/data/
+paper/data/eua_monthly.csv
 site/
-scripts/
+scripts/*
+!scripts/paper_data.py
 notebooks/
 PREREGISTRATION.md
 PREREGISTRATION-amendment-*.md
@@ -64,4 +67,4 @@ archivers/README.md
 archivers/crontab.example
 config/episodes_candidates_*.csv
 tests/test_site_parity.py
-data/
+/data/

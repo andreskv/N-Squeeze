@@ -1,0 +1,15 @@
+{
+  "rows": 138,
+  "first_month": "2015-04-01",
+  "last_month": "2026-09-01",
+  "sealed_after": null,
+  "vintage_pink_sheet": "2026-10-11 23:56:55.502041",
+  "vintage_eex": "2026-10-16 16:50:03.290685",
+  "sources": {
+    "ttf_usd_mmbtu": "World Bank Pink Sheet, 'Natural gas, Europe' (TTF from 2015-04)",
+    "hh_usd_mmbtu": "World Bank Pink Sheet, 'Natural gas, US' (Henry Hub)",
+    "urea_usd_t": "World Bank Pink Sheet, 'Urea' (fob Black Sea to 2022-02; Middle East)",
+    "eua_eur_t": "EEX primary auctions, monthly volume-weighted clearing price",
+    "fx_usd_per_eur": "ECB euro reference rate, monthly mean of daily fixings"
+  }
+}

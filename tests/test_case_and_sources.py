@@ -171,6 +171,17 @@ def test_panel_from_extract_matches_derive(tmp_path):
     assert p.ttf_eur_mwh.iloc[0] == pytest.approx(units.usd_mmbtu_to_eur_mwh(27.0, 1.13))
 
 
+def test_panel_from_extract_reads_eua_from_its_own_file(tmp_path):
+    f = tmp_path / "p.csv"
+    f.write_text(
+        "month,ttf_usd_mmbtu,hh_usd_mmbtu,urea_usd_t,fx_usd_per_eur\n2022-02-01,27.0,4.7,750,1.13\n"
+    )
+    with pytest.raises(FileNotFoundError):
+        cn.panel_from_extract(f)
+    (tmp_path / "eua_monthly.csv").write_text("month,eua_eur_t\n2022-02-01,90\n")
+    assert cn.panel_from_extract(f).eua_eur_t.iloc[0] == 90
+
+
 def test_holdout_onsets_keep_accepted_2026_onsets_and_score(monkeypatch):
     ep = pd.DataFrame(
         {

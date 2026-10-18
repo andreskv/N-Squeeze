@@ -22,6 +22,7 @@ origin changes from the Black Sea to the Middle East in March 2022.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -81,8 +82,20 @@ def monthly_panel(store: PITStore | None = None, *, as_of=None) -> pd.DataFrame:
 
 
 def panel_from_extract(path) -> pd.DataFrame:
-    """The ``monthly_panel`` frame from a CSV extract of its five source columns."""
+    """The ``monthly_panel`` frame from a CSV extract of its five source columns.
+
+    The public extract has no EUA column, because the EEX terms for redistribution are
+    unchecked. The EUA series is then read from ``eua_monthly.csv`` in the same folder.
+    """
     p = pd.read_csv(path, index_col="month", parse_dates=True)
+    if "eua_eur_t" not in p:
+        eua = Path(path).with_name("eua_monthly.csv")
+        if not eua.exists():
+            raise FileNotFoundError(
+                f"{eua} not found. Build it from EEX primary-auction results "
+                "(monthly volume-weighted clearing price, column eua_eur_t)."
+            )
+        p = p.join(pd.read_csv(eua, index_col="month", parse_dates=True).eua_eur_t)
     return _derive(
         p[["ttf_usd_mmbtu", "hh_usd_mmbtu", "urea_usd_t", "eua_eur_t", "fx_usd_per_eur"]]
     )
