@@ -169,3 +169,50 @@ def test_panel_from_extract_matches_derive(tmp_path):
     p = cn.panel_from_extract(f)
     assert p.index.name == "month" and list(p.urea_origin) == ["Black Sea", "Middle East"]
     assert p.ttf_eur_mwh.iloc[0] == pytest.approx(units.usd_mmbtu_to_eur_mwh(27.0, 1.13))
+
+
+def test_holdout_onsets_keep_accepted_2026_onsets_and_score(monkeypatch):
+    ep = pd.DataFrame(
+        {
+            "date": pd.to_datetime(
+                ["2021-09-15", "2026-03-03", "2026-03-16", "2026-03-15", "2026-09-04", "2026-06-03"]
+            ),
+            "direction": ["curtail"] * 6,
+            "use": ["onset", "onset", "onset", "onset", "onset", "context"],
+            "sample": ["calibration", "holdout", "holdout", "holdout", "holdout", "holdout"],
+            "review": [None, "accepted", "accepted", "rejected", "accepted", "accepted"],
+            "operator": list("ABCDEF"),
+        }
+    )
+    monkeypatch.setattr(cn, "load_episodes", lambda include_holdout=False: ep)
+    h = cn.holdout_onsets()
+    assert list(h.cluster.unique()) == ["2026-03", "2026-09"]  # rejected and context rows dropped
+    sig = pd.Series(False, index=pd.date_range("2026-01-01", "2026-10-01", freq="MS"))
+    sig.loc["2026-04-01":"2026-05-01"] = True  # turns on one month after March
+    sig.loc["2026-09-01":] = True  # a new spell starts in the onset month
+    sc = cn.score_onsets(sig, onsets=h).set_index("episode")
+    assert sc.loc["2026-03", "outcome"] == "hit" and sc.loc["2026-03", "lead_months"] == -1
+    assert sc.loc["2026-09", "outcome"] == "hit" and sc.loc["2026-09", "lead_months"] == 0
+
+
+def test_comext_unit_value_is_euros_per_tonne():
+    class Store:
+        def read(self, source, as_of=None):
+            ids = [
+                "COMEXT.EU27.IMP.310210.EXT_EU27_2020.VALUE_IN_EUROS",
+                "COMEXT.EU27.IMP.310210.EXT_EU27_2020.QUANTITY_IN_100KG",
+                "COMEXT.EU27.IMP.310210.EG.VALUE_IN_EUROS",
+            ]
+            return pd.DataFrame(
+                {
+                    "series_id": ids,
+                    "observed_at": pd.Timestamp("2026-01-01"),
+                    "value": [4.0e6, 1.0e5, 9.9e9],
+                }
+            )
+
+    uv = cn.comext_unit_value(Store())
+    assert uv.loc["2026-01-01", "tonnes"] == pytest.approx(1.0e4)  # 100 kg units → t
+    assert uv.loc["2026-01-01", "unit_value_eur_t"] == pytest.approx(
+        400.0
+    )  # the partner row is ignored

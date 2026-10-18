@@ -145,6 +145,26 @@ def urea_cost(panel: pd.DataFrame, c: CostInputs) -> pd.DataFrame:
 # 3 parity
 
 
+def comext_unit_value(store: PITStore, product: str = "310210", *, as_of=None) -> pd.DataFrame:
+    """EU-27 imports from all extra-EU partners: €/t at the EU border (freight included), and t.
+
+    Comext reports value in euros and quantity in 100 kg. Month-start index.
+    """
+    df = store.read("comext", as_of=as_of)
+    base = f"COMEXT.EU27.IMP.{product}.EXT_EU27_2020."
+    val = df[df.series_id == base + "VALUE_IN_EUROS"].set_index("observed_at").value
+    qty_t = df[df.series_id == base + "QUANTITY_IN_100KG"].set_index("observed_at").value * 0.1
+    out = pd.DataFrame({"unit_value_eur_t": val / qty_t, "tonnes": qty_t}).dropna()
+    out.index.name = "month"
+    return out
+
+
+def comext_parity_band(uv: pd.Series, P: ParameterSet) -> pd.DataFrame:
+    """Import parity from the border unit value: UV × (1 + duty) at both ends of the duty band."""
+    t_lo, t_hi = P["assumptions.urea_duty_band"].range
+    return pd.DataFrame({"low": uv * (1 + t_lo), "high": uv * (1 + t_hi)})
+
+
 def urea_parity(panel: pd.DataFrame, *, freight_usd: float, duty: float) -> pd.Series:
     """Landed import parity, €/t urea: (FOB + F)(1 + τ) / FX. No CBAM before 2026."""
     return (panel.urea_usd_t + freight_usd) * (1 + duty) / panel.fx_usd_per_eur
@@ -182,8 +202,23 @@ def episode_onsets() -> pd.DataFrame:
     the previous one. The label is the first onset month, e.g. "2022-03".
     """
     ep = load_episodes()
-    ep = ep[(ep.direction == "curtail") & (ep["sample"] == "calibration")].copy()
-    ep = ep.sort_values("date")
+    return _cluster(ep[(ep.direction == "curtail") & (ep["sample"] == "calibration")])
+
+
+def holdout_onsets() -> pd.DataFrame:
+    """Accepted 2026 curtailment onsets, clustered as in ``episode_onsets``. Needs the freeze."""
+    ep = load_episodes(include_holdout=True)
+    keep = (
+        (ep["sample"] == "holdout")
+        & (ep.direction == "curtail")
+        & (ep.use == "onset")
+        & ep.review.fillna("").str.startswith("accepted")
+    )
+    return _cluster(ep[keep])
+
+
+def _cluster(ep: pd.DataFrame) -> pd.DataFrame:
+    ep = ep.sort_values("date").copy()
     ep["month"] = ep.date.dt.to_period("M").dt.to_timestamp()
     gap = ep.month.dt.to_period("M").astype(int).diff().fillna(CLUSTER_GAP_MONTHS + 1)
     first = ep.month.where(gap > CLUSTER_GAP_MONTHS).ffill()
@@ -197,15 +232,19 @@ def spell_starts(signal: pd.Series) -> pd.DatetimeIndex:
     return s.index[s & ~s.shift(1, fill_value=False)]
 
 
-def score_onsets(signal: pd.Series, *, tolerance_months: int = 1, window: int = 6) -> pd.DataFrame:
+def score_onsets(
+    signal: pd.Series, *, tolerance_months: int = 1, window: int = 6, onsets=None
+) -> pd.DataFrame:
     """One row per episode: documented onset, nearest predicted spell start, outcome.
+
+    ``onsets`` defaults to the calibration episodes; pass ``holdout_onsets()`` for 2026.
 
     outcome: "hit" (a spell starts within ± tolerance), "ongoing" (the signal was
     already on at the documented onset, so nothing starts) or "miss".
     """
     starts = spell_starts(signal)
     rows = []
-    for label, grp in episode_onsets().groupby("cluster"):
+    for label, grp in (episode_onsets() if onsets is None else onsets).groupby("cluster"):
         doc = grp.month.min()
         near = [t for t in starts if abs(_months(t, doc)) <= window]
         pred = min(near, key=lambda t: abs(_months(t, doc))) if near else None
