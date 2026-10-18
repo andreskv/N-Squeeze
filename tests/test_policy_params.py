@@ -83,3 +83,22 @@ def test_freeze_rejects_an_edited_preregistration(tmp_path, monkeypatch):
     doc.write_text("frozen text, edited")
     with pytest.raises(HoldoutLocked):
         require_frozen(state)
+
+
+def test_freeze_rejects_an_edited_amendment(tmp_path, monkeypatch):
+    import nsqueeze.freeze as fz
+
+    (tmp_path / "config").mkdir()
+    amend = tmp_path / "PREREGISTRATION-amendment-1.md"
+    amend.write_text("amendment text")
+    monkeypatch.setattr(fz, "config_dir", lambda: tmp_path / "config")
+    entry = {
+        "file": amend.name,
+        "sha256": fz.preregistration_sha256(amend),
+        "frozen_at": "2026-10-18",
+    }
+    state = FreezeState(True, "unused: main file absent here", "2026-10-16", (entry,))
+    assert require_frozen(state) is state
+    amend.write_text("amendment text, edited")
+    with pytest.raises(HoldoutLocked):
+        require_frozen(state)

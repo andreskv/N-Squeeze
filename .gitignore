@@ -53,6 +53,7 @@ site/
 scripts/
 notebooks/
 PREREGISTRATION.md
+PREREGISTRATION-amendment-*.md
 Makefile
 .editorconfig
 .pre-commit-config.yaml

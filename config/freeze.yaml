@@ -12,3 +12,7 @@ preregistration_sha256: e7fc048855be6e6cfca8f723f2fd1a8eb978c1fbea43b5abf23723a2
 frozen_at: 2026-10-16           # ISO date
 calibration_window: ["2015-01-01", "2025-12-31"]
 holdout_window: ["2026-01-01", null]
+amendments:   # each file stays private; the commit that adds its hash dates it
+  - file: PREREGISTRATION-amendment-1.md
+    sha256: f153c4db12c93c1e7c559ebd838efaecfd463f8a2fc0ef118380b678f327df4d
+    frozen_at: 2026-10-18

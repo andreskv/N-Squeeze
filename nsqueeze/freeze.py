@@ -28,11 +28,17 @@ class FreezeState:
     frozen: bool
     preregistration_sha256: str | None
     frozen_at: str | None
+    amendments: tuple[dict, ...] = ()  # {file, sha256, frozen_at}, each also private
 
     @classmethod
     def load(cls, path: Path | None = None) -> FreezeState:
         raw = yaml.safe_load((path or config_dir() / "freeze.yaml").read_text(encoding="utf-8"))
-        return cls(bool(raw["frozen"]), raw.get("preregistration_sha256"), raw.get("frozen_at"))
+        return cls(
+            bool(raw["frozen"]),
+            raw.get("preregistration_sha256"),
+            raw.get("frozen_at"),
+            tuple(raw.get("amendments") or ()),
+        )
 
 
 def sealed_after(state: FreezeState | None = None) -> pd.Timestamp | None:
@@ -56,11 +62,12 @@ def require_frozen(state: FreezeState | None = None) -> FreezeState:
             "Parameters are not frozen. Record the SHA-256 of PREREGISTRATION.md in "
             "config/freeze.yaml, set frozen: true and commit, before you use 2026 hold-out data."
         )
-    doc = config_dir().parent / "PREREGISTRATION.md"
-    if doc.exists() and preregistration_sha256(doc) != s.preregistration_sha256:
-        raise HoldoutLocked(
-            "PREREGISTRATION.md changed after the freeze: its SHA-256 does not match."
-        )
+    docs = [("PREREGISTRATION.md", s.preregistration_sha256)]
+    docs += [(a["file"], a["sha256"]) for a in s.amendments]
+    for name, sha in docs:
+        doc = config_dir().parent / name
+        if doc.exists() and preregistration_sha256(doc) != sha:
+            raise HoldoutLocked(f"{name} changed after the freeze: its SHA-256 does not match.")
     return s
 
 
