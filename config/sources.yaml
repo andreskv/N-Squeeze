@@ -82,6 +82,16 @@ ecb_fx:
   verified: true   # fetched and parsed 2026-10-12
   phase: 0
 
+ecb_fx_nok:
+  name: ECB euro reference rate NOK/EUR
+  layer: market_tests
+  portal: https://data.ecb.europa.eu
+  frequency: daily
+  auth: none
+  recoverable: true
+  verified: true   # fetched and parsed 2026-10-19
+  phase: 0
+
 eua_auctions:
   name: EEX EUA primary-auction results (2012 → today)
   layer: nitrogen_cost_model
@@ -118,6 +128,16 @@ ttf_daily_candidate:
   grade: B    # passed the monthly reconciliation test on 2026-10-15 (98 of 98 months within 3 %)
   recoverable: false   # snapshot daily
   verified: true   # fetched and parsed 2026-10-15
+  phase: 0
+
+equities_daily:
+  name: Daily adjusted close of nitrogen producers (local currency) and of the S&P 500 and MSCI country ETFs (USD), Yahoo Finance
+  layer: market_tests
+  frequency: daily
+  auth: none
+  grade: C
+  recoverable: true   # Yahoo serves the full history; snapshots keep the vintage
+  verified: true   # every ticker fetched and parsed 2026-10-19
   phase: 0
 
 comext:

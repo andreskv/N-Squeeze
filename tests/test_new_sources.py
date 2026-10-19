@@ -253,6 +253,48 @@ def test_yahoo_ttf_dates_in_exchange_time_zone():
     assert df.unit.unique().tolist() == ["EUR/MWh"] and df.series_id.iloc[0] == "YF.TTF=F"
 
 
+def test_yahoo_equity_uses_adjusted_close():
+    from nsqueeze.io.sources.yahoo import adjclose_to_canonical
+
+    body = {
+        "chart": {
+            "result": [
+                {
+                    "meta": {"currency": "NOK", "exchangeName": "OSL", "gmtoffset": 3600},
+                    "timestamp": [1764576000, 1764662400],
+                    "indicators": {
+                        "quote": [{"close": [100.0, 101.0]}],
+                        "adjclose": [{"adjclose": [95.0, None]}],
+                    },
+                }
+            ]
+        }
+    }
+    df = adjclose_to_canonical(body, "YAR.OL")
+    assert df.value.tolist() == [95.0] and df.series_id.iloc[0] == "YF.YAR.OL.adjclose"
+    assert df.unit.iloc[0] == "NOK"
+
+
+def test_ecb_nok_requests_the_nok_series():
+    import datetime as dt
+
+    import httpx
+
+    from nsqueeze.io.sources.ecb import ECBFxNOK
+
+    seen = []
+
+    def handler(req):
+        seen.append(str(req.url))
+        return httpx.Response(200, text="TIME_PERIOD,OBS_VALUE\n2026-10-16,11.62\n")
+
+    src = ECBFxNOK(client=httpx.Client(transport=httpx.MockTransport(handler)))
+    src.keep_raw = lambda *a: None
+    df = src.fetch(dt.date(2026, 10, 16), dt.date(2026, 10, 16))
+    assert "/EXR/D.NOK.EUR.SP00.A" in seen[0]
+    assert df.series_id.iloc[0] == "EXR.D.NOK.EUR.SP00.A" and df.unit.iloc[0] == "NOK/EUR"
+
+
 def test_sentinel2_scene_features_to_rows():
     from nsqueeze.io.sources.sentinel2 import STATS, to_canonical
 

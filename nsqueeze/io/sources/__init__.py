@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from nsqueeze.io.sources.base import NotYetImplemented, Source
-from nsqueeze.io.sources.ecb import ECBFx
+from nsqueeze.io.sources.ecb import ECBFx, ECBFxNOK
 from nsqueeze.io.sources.eex import EUAAuctions
 from nsqueeze.io.sources.eia import HenryHub
 from nsqueeze.io.sources.entsoe import ENTSOEGasGeneration
@@ -22,7 +22,7 @@ from nsqueeze.io.sources.openmeteo import OpenMeteoWeather
 from nsqueeze.io.sources.portwatch import PortWatch
 from nsqueeze.io.sources.sentinel2 import Sentinel2SWIR
 from nsqueeze.io.sources.worldbank import PinkSheetMonthly
-from nsqueeze.io.sources.yahoo import YahooTTF
+from nsqueeze.io.sources.yahoo import YahooEquities, YahooTTF
 
 
 def _stub(source_name: str, phase: int) -> type[Source]:
@@ -33,6 +33,7 @@ REGISTRY: dict[str, type[Source]] = {
     s.name: s
     for s in (
         ECBFx,
+        ECBFxNOK,
         HenryHub,
         AGSI,
         ALSI,
@@ -50,6 +51,7 @@ REGISTRY: dict[str, type[Source]] = {
         PortWatch,
         Sentinel2SWIR,
         YahooTTF,
+        YahooEquities,
         _stub("wto_hormuz", 0),
         ETSVerifiedEmissions,
     )
