@@ -1,21 +1,19 @@
-# ─────────────────────────────────────────────────────────────────────────────
 # Pre-registration freeze
-#
-# While frozen: false, code may fit parameters on 2015–2025 data but MUST NOT read 2026 hold-out episodes or score 2026 results
-#
-# Because 2026 events are already public, this is a pseudo-holdout
-# The genuine holdout is winter 2026/27 (timestamped weekly logs in data/logs/).
-# ─────────────────────────────────────────────────────────────────────────────
+# While frozen: false, code may fit parameters on 2015-2025 data but must not read 2026 hold-out episodes or score 2026 results
+# The real holdout is winter 2026/27 (timestamped weekly logs in data/logs/).
 
 frozen: true
-preregistration_sha256: e7fc048855be6e6cfca8f723f2fd1a8eb978c1fbea43b5abf23723a298c8e2ff   # SHA-256 of PREREGISTRATION.md, which stays private; the commit that adds it dates it
-frozen_at: 2026-10-16           # ISO date
+preregistration_sha256: e7fc048855be6e6cfca8f723f2fd1a8eb978c1fbea43b5abf23723a298c8e2ff   # SHA-256 of PREREGISTRATION.md, which stays private
+frozen_at: 2026-10-16  # ISO date
 calibration_window: ["2015-01-01", "2025-12-31"]
 holdout_window: ["2026-01-01", null]
-amendments:   # each file stays private; the commit that adds its hash dates it
+amendments:
   - file: PREREGISTRATION-amendment-1.md
     sha256: f153c4db12c93c1e7c559ebd838efaecfd463f8a2fc0ef118380b678f327df4d
     frozen_at: 2026-10-18
   - file: PREREGISTRATION-amendment-2.md
     sha256: 5cfdd199fc806b4c036ac5e4f0664f4ea6db2fc01826cf0a09488420848459b7
     frozen_at: 2026-10-18
+  - file: PREREGISTRATION-amendment-3.md
+    sha256: 951687a45fed4c8d82b138a87c3e4f9406516e267bab812569d7f4893ed7a27f
+    frozen_at: 2026-10-19
