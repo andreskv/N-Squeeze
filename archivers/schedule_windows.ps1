@@ -40,6 +40,7 @@ $jobs = @(
   # Weekly (Monday): snapshots of revisable or slow-moving sources
   @{ Source = "portwatch";  At = "07:00"; Weekly = $true; Days = 21 },
   @{ Source = "comext";     At = "07:10"; Weekly = $true; Days = 400 },
+  @{ Source = "pink_sheet_monthly"; At = "07:30"; Weekly = $true; Days = 400 },  # World Bank, updated early each month
   @{ Source = "eurostat_hdd"; At = "07:15"; Weekly = $true; Days = 400 },
   @{ Source = "eurostat_population"; At = "07:20"; Weekly = $true; Days = 800 },
   @{ Source = "eurostat_gas_trade"; At = "07:25"; Weekly = $true; Days = 400 },
