@@ -20,3 +20,9 @@ amendments:
   - file: PREREGISTRATION-amendment-4.md
     sha256: 04610ef02a8dc51d623f6edb55fb16678a6b1d288c6af427813842f0caa9f1f2
     frozen_at: 2026-10-19
+  - file: PREREGISTRATION-amendment-5.md
+    sha256: e48658e31c6ae177caddc42ded8f3afbb74b0f8ffb5dc73999085aef2ba94dcc
+    frozen_at: 2026-10-19
+  - file: PREREGISTRATION-amendment-6.md
+    sha256: c005d27f24c3241a2be8e8e0a40ed07ab92a2dff04f909a59873793486b5df7f
+    frozen_at: 2026-10-19
