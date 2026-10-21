@@ -1,0 +1,22 @@
+firm,site,country,region,ammonia_kt,equity_share,grade,source,status,notes
+CF Industries,Donaldsonville,US,north_america,4335,1,A,"CF Industries 10-K FY2024, Item 1, capacity table (31 Dec 2024)",verified,
+CF Industries,Medicine Hat,CA,north_america,1230,1,A,"CF Industries 10-K FY2024, Item 1, capacity table (31 Dec 2024)",verified,
+CF Industries,Port Neal,US,north_america,1230,1,A,"CF Industries 10-K FY2024, Item 1, capacity table (31 Dec 2024)",verified,
+CF Industries,Courtright,CA,north_america,500,1,A,"CF Industries 10-K FY2024, Item 1, capacity table (31 Dec 2024)",verified,
+CF Industries,Verdigris,US,north_america,1210,1,A,"CF Industries 10-K FY2024, Item 1, capacity table (31 Dec 2024)",verified,
+CF Industries,Woodward,US,north_america,480,1,A,"CF Industries 10-K FY2024, Item 1, capacity table (31 Dec 2024)",verified,
+CF Industries,Yazoo City,US,north_america,570,1,A,"CF Industries 10-K FY2024, Item 1, capacity table (31 Dec 2024)",verified,
+CF Industries,Waggaman,US,north_america,880,1,A,"CF Industries 10-K FY2024, Item 1, capacity table (31 Dec 2024)",verified,
+CF Industries,Point Lisas (PLNL),TT,elsewhere,360,1,A,"CF Industries 10-K FY2024, Item 1, capacity table (31 Dec 2024)",verified,The 10-K gives CF's 50 % interest; the value is already CF's share
+CF Industries,Billingham,GB,europe,0,1,A,"CF Industries 10-K FY2024, Item 1, Manufacturing Facilities",verified,Ammonia plant permanently closed (decision Q3 2023); the site imports ammonia
+Yara International,Belle Plaine,CA,north_america,800,1,A,"Yara Integrated Report 2024, p. 266 (goodwill CGUs)",verified,
+Yara International,Freeport,US,north_america,750,0.68,A,"Yara Integrated Report 2024, p. 257 (joint operations)",verified,
+Yara International,Pilbara,AU,elsewhere,800,1,A,"Yara Integrated Report 2024, p. 266 (goodwill CGUs)",verified,"""approximately 0.8 million tonnes"""
+Yara International,Tringen,TT,elsewhere,1000,0.49,A,"Yara Integrated Report 2024, p. 257 (joint operations)",verified,
+Yara International,Babrala,IN,elsewhere,800,1,A,"Yara Integrated Report 2024, p. 266 (goodwill CGUs)",check,"The report says the plant ""produces"" 0.8 Mt ammonia a year, not capacity"
+Yara International,European plants,,europe,,,,,pending,OI-46: no plant capacity in the Integrated Report 2024
+Yara International,Cubatão,BR,elsewhere,,,,,pending,OI-46: no plant capacity in the Integrated Report 2024
+LSB Industries,,US,north_america,,,,,pending,OI-47
+Grupa Azoty,,PL,europe,,,,,pending,OI-47
+SABIC Agri-Nutrients,,SA,gulf,,,,,pending,OI-47
+Industries Qatar,,QA,gulf,,,,,pending,OI-47
