@@ -18,6 +18,7 @@ from nsqueeze.io.sources.eurostat import (
     EurostatPopulationNuts2,
 )
 from nsqueeze.io.sources.gie import AGSI, ALSI
+from nsqueeze.io.sources.landsat import LandsatThermal
 from nsqueeze.io.sources.openmeteo import OpenMeteoWeather
 from nsqueeze.io.sources.portwatch import PortWatch
 from nsqueeze.io.sources.sentinel2 import Sentinel2SWIR
@@ -50,6 +51,7 @@ REGISTRY: dict[str, type[Source]] = {
         OpenMeteoWeather,
         PortWatch,
         Sentinel2SWIR,
+        LandsatThermal,
         YahooTTF,
         YahooEquities,
         _stub("wto_hormuz", 0),

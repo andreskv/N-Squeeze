@@ -307,3 +307,17 @@ def test_sentinel2_scene_features_to_rows():
     assert len(df) == len(STATS) - 1  # a missing statistic (cloud-free box empty) is left out
     assert df.series_id.str.startswith("S2.NL-SLUISK.").all()
     assert str(df.observed_at.iloc[0]) == "2022-08-03 10:57:00.339000"
+
+
+def test_landsat_scene_features_to_rows():
+    from nsqueeze.io.sources.landsat import STATS, to_canonical
+
+    props = {s: 300.0 for s in STATS} | {
+        "time": 1659524220339,
+        "scene_id": "LC09_X",
+        "st_core_mean": None,
+    }
+    df = to_canonical([{"properties": props}], "NL-SLUISK")
+    assert len(df) == len(STATS) - 1  # no clear pixel in the disc: the mean is left out
+    assert df.series_id.str.startswith("LS.NL-SLUISK.").all()
+    assert set(df.unit) == {"K", "share"}

@@ -57,6 +57,7 @@ CHUNK_DAYS = {
     "portwatch": 366,
     "entsoe": 366,
     "s2_swir": 92,  # one quarter: about 20 scenes per plant, one Earth Engine call each
+    "landsat_st": 366,  # one year: about 45 scenes per plant (two satellites, 8-day revisit)
 }
 
 
