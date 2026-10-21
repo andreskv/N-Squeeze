@@ -92,6 +92,16 @@ ecb_fx_nok:
   verified: true   # fetched and parsed 2026-10-19
   phase: 0
 
+ecb_fx_pln:
+  name: ECB euro reference rate PLN/EUR
+  layer: market_tests
+  portal: https://data.ecb.europa.eu
+  frequency: daily
+  auth: none
+  recoverable: true
+  verified: true   # fetched and parsed 2026-10-21
+  phase: 0
+
 eua_auctions:
   name: EEX EUA primary-auction results (2012 → today)
   layer: nitrogen_cost_model

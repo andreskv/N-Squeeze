@@ -19,6 +19,6 @@ Yara International,Cubatão,BR,elsewhere,405,1,C,"Yara Capital Markets presentat
 LSB Industries,El Dorado,US,north_america,493,1,A,"LSB Industries 10-K FY2024, Item 2",verified,Short tons
 LSB Industries,Cherokee,US,north_america,188,1,A,"LSB Industries 10-K FY2024, Item 2",verified,Short tons
 LSB Industries,Pryor,US,north_america,246,1,A,"LSB Industries 10-K FY2024, Item 2",verified,Short tons
-Grupa Azoty,"Tarnow, Kedzierzyn, Pulawy, Police",PL,europe,,,,,pending,"OI-47: all plants in Poland; the revenue rule needs the 2024 annual report"
+Grupa Azoty,"Tarnow, Kedzierzyn, Pulawy, Police",PL,europe,,,A,"Grupa Azoty consolidated financial statements 2024, note 8 (p. 32)",verified,"All ammonia plants in Poland, so the Europe share is 1. Agro is the largest segment: external revenue PLN 7,884,547 thousand of 13,042,933 thousand"
 SABIC Agri-Nutrients,"Jubail (SAFCO I-IV, Al-Bayroni, Ibn Al Baytar); GPIC Bahrain",SA,gulf,,,A,SABIC Agri-Nutrients Board of Directors' report 2024,verified,"No capacity by plant; every ammonia plant is in the GCC, so the Gulf share is 1"
 Industries Qatar,QAFCO Mesaieed,QA,gulf,3840,1,A,"Industries Qatar Annual Report 2024, p. 40",verified,QAFCO is 100 % owned

@@ -43,3 +43,8 @@ class ECBFxNOK(ECBFx):
     name = "ecb_fx_nok"
     currency = "NOK"
     verified = True  # endpoint exercised and parsed on 2026-10-19
+
+
+class ECBFxPLN(ECBFx):
+    name = "ecb_fx_pln"
+    currency = "PLN"

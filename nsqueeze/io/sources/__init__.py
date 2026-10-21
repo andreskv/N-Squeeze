@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from nsqueeze.io.sources.base import NotYetImplemented, Source
-from nsqueeze.io.sources.ecb import ECBFx, ECBFxNOK
+from nsqueeze.io.sources.ecb import ECBFx, ECBFxNOK, ECBFxPLN
 from nsqueeze.io.sources.eex import EUAAuctions
 from nsqueeze.io.sources.eia import HenryHub
 from nsqueeze.io.sources.entsoe import ENTSOEGasGeneration
@@ -35,6 +35,7 @@ REGISTRY: dict[str, type[Source]] = {
     for s in (
         ECBFx,
         ECBFxNOK,
+        ECBFxPLN,
         HenryHub,
         AGSI,
         ALSI,
