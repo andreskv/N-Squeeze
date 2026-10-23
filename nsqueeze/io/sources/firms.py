@@ -17,6 +17,7 @@ import io
 import json
 import time
 
+import httpx
 import numpy as np
 import pandas as pd
 
@@ -70,6 +71,20 @@ class FirmsVIIRS(Source):
         r.raise_for_status()
         return pd.read_csv(io.StringIO(r.text)).max_date.map(pd.Timestamp).max().date()
 
+    def _get(self, url: str):
+        """One request with its own retries: an area request can take minutes when FIRMS is busy,
+        and a chunk-level retry would refetch the whole year."""
+        for wait in (30, 120, 300, None):
+            try:
+                r = self.client.get(url, timeout=300)
+                r.raise_for_status()
+                return r
+            except (httpx.TimeoutException, httpx.HTTPStatusError):
+                if wait is None:
+                    raise
+                time.sleep(wait)
+        raise AssertionError("unreachable")
+
     def fetch(self, start: dt.date, end: dt.date) -> pd.DataFrame:
         plants = plants_with_coordinates()
         sp_end = self._sp_end()
@@ -77,8 +92,7 @@ class FirmsVIIRS(Source):
         while a <= end:
             source = "VIIRS_SNPP_SP" if a <= sp_end else "VIIRS_SNPP_NRT"
             days = min(5, (end - a).days + 1, (sp_end - a).days + 1 if a <= sp_end else 5)
-            r = self.client.get(f"{API}/area/csv/{self.api_key}/{source}/{BOX}/{days}/{a}")
-            r.raise_for_status()
+            r = self._get(f"{API}/area/csv/{self.api_key}/{source}/{BOX}/{days}/{a}")
             if not r.text.startswith("latitude"):
                 raise ValueError(f"FIRMS: unexpected reply for {source} {a}: {r.text[:120]}")
             self.keep_raw(r.content, "csv")
