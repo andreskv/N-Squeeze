@@ -337,3 +337,26 @@ def test_plant_weather_points_are_the_plants():
 
     pts = OpenMeteoPlantWeather().points()
     assert list(pts.columns) == ["geo", "lat", "lon"] and pts.geo.str.contains("-").all()
+
+
+def test_firms_keeps_detections_near_plants_only():
+    import pandas as pd
+
+    from nsqueeze.io.sources.firms import near_plants
+
+    plants = pd.DataFrame({"plant_id": ["P"], "lat": [50.0], "lon": [10.0]})
+    det = pd.DataFrame(
+        {
+            "latitude": [50.0045, 51.0],  # about 0.5 km and 111 km north
+            "longitude": [10.0, 10.0],
+            "acq_date": ["2022-01-10", "2022-01-10"],
+            "acq_time": [104, 104],
+            "daynight": ["N", "N"],
+            "type": [2, 2],
+            "confidence": ["n", "n"],
+            "frp": [1.2, 3.4],
+        }
+    )
+    out = near_plants(det, plants, "VIIRS_SNPP_SP")
+    assert len(out) == 1 and abs(out.value.iloc[0] - 0.5) < 0.01
+    assert str(out.observed_at.iloc[0]) == "2022-01-10 01:04:00"

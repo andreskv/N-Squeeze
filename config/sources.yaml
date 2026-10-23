@@ -102,6 +102,36 @@ ecb_fx_pln:
   verified: true   # fetched and parsed 2026-10-21
   phase: 0
 
+firms_viirs:
+  name: NASA FIRMS VIIRS 375 m active fire, S-NPP (standard, then near-real-time)
+  layer: plant_activity
+  portal: https://firms.modaps.eosdis.nasa.gov
+  frequency: daily
+  auth: { env: FIRMS_MAP_KEY }
+  recoverable: true
+  verified: true   # area API fetched and parsed 2026-10-23
+  phase: 3
+
+weather_plants:
+  name: Open-Meteo historical API (ERA5), daily Tmax/Tmin at each plant in config/plants.csv
+  layer: plant_activity
+  portal: https://open-meteo.com
+  frequency: daily
+  auth: none
+  recoverable: true
+  verified: true   # parsed 2026-10-23
+  phase: 3
+
+s2_plume:
+  name: Sentinel-2 L2A scene classes 8-9 near each plant (Google Earth Engine)
+  layer: plant_activity
+  portal: https://developers.google.com/earth-engine/datasets/catalog/COPERNICUS_S2_SR_HARMONIZED
+  frequency: per scene
+  auth: { env: GEE_PROJECT }
+  recoverable: true
+  verified: true   # checked on a site outside the panel 2026-10-23
+  phase: 3
+
 eua_auctions:
   name: EEX EUA primary-auction results (2012 → today)
   layer: nitrogen_cost_model

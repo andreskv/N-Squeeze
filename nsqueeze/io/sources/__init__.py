@@ -17,6 +17,7 @@ from nsqueeze.io.sources.eurostat import (
     EurostatPopulation,
     EurostatPopulationNuts2,
 )
+from nsqueeze.io.sources.firms import FirmsVIIRS
 from nsqueeze.io.sources.gie import AGSI, ALSI
 from nsqueeze.io.sources.landsat import LandsatThermal
 from nsqueeze.io.sources.openmeteo import OpenMeteoPlantWeather, OpenMeteoWeather
@@ -54,6 +55,7 @@ REGISTRY: dict[str, type[Source]] = {
         Sentinel2SWIR,
         LandsatThermal,
         Sentinel2Plume,
+        FirmsVIIRS,
         OpenMeteoPlantWeather,
         YahooTTF,
         YahooEquities,
