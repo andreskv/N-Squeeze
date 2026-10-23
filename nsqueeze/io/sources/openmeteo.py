@@ -65,8 +65,11 @@ class OpenMeteoWeather(Source):
             time.sleep(wait)
         raise AssertionError("unreachable")
 
+    def points(self) -> pd.DataFrame:
+        return weather_points()
+
     def chunks(self, start: dt.date, end: dt.date):
-        pts = weather_points()
+        pts = self.points()
         a = start
         while a <= end:
             b = min(end, dt.date(a.year + CHUNK_YEARS, 1, 1) - dt.timedelta(days=1))
@@ -94,3 +97,16 @@ class OpenMeteoWeather(Source):
             store.write(self.name, frame)
             n += len(frame)
         return n
+
+
+class OpenMeteoPlantWeather(OpenMeteoWeather):
+    """The same daily Tmax and Tmin at each ammonia plant's coordinates (``config/plants.csv``).
+
+    Used to select cold-weather scenes for the condensation-plume sensor.
+    """
+
+    name = "weather_plants"
+
+    def points(self) -> pd.DataFrame:
+        p = pd.read_csv(config_dir() / "plants.csv").dropna(subset=["lat", "lon"])
+        return p.rename(columns={"plant_id": "geo"})[["geo", "lat", "lon"]]

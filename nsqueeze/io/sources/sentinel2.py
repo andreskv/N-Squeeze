@@ -111,3 +111,73 @@ class Sentinel2SWIR(Source):
             fc = ee.FeatureCollection(col.map(_scene_stats(ee, box, clear))).getInfo()
             frames.append(to_canonical(fc["features"], r.plant_id))
         return pd.concat(frames, ignore_index=True) if frames else pd.DataFrame(columns=COLUMNS)
+
+
+PLUME_COLLECTION = "COPERNICUS/S2_SR_HARMONIZED"
+PLUME_CORE_M, PLUME_RING_IN_M, PLUME_RING_OUT_M = 500, 1500, 3000
+PLUME_STATS = {
+    "core_cloud_frac": "share",
+    "ring_cloud_frac": "share",
+    "core_px": "pixels",
+    "ring_px": "pixels",
+}
+
+
+def plume_to_canonical(features: list[dict], plant_id: str) -> pd.DataFrame:
+    """Scene features → canonical rows ``S2P.<plant>.<stat>``."""
+    rows = []
+    for f in features:
+        p = f["properties"]
+        t = pd.to_datetime(p["time"], unit="ms")
+        meta = json.dumps({"product_id": p.get("product_id")})
+        for stat, unit in PLUME_STATS.items():
+            if p.get(stat) is not None:
+                rows.append((f"S2P.{plant_id}.{stat}", t, float(p[stat]), unit, meta))
+    return pd.DataFrame(rows, columns=COLUMNS)
+
+
+class Sentinel2Plume(Source):
+    """Share of pixels in scene classes 8 and 9 (cloud, medium and high probability) in a
+    500 m disc around the plant and in a ring from 1.5 to 3 km, per Sentinel-2 Level-2A scene.
+
+    A condensation plume over a running plant in cold weather is classed as cloud. The cold-day
+    filter and the core-minus-ring statistic are applied later, in the open.
+    """
+
+    name = "s2_plume"
+    env_key = "GEE_PROJECT"
+
+    def fetch(self, start: dt.date, end: dt.date) -> pd.DataFrame:
+        import ee  # optional dependency (geo extra)
+
+        ee.Initialize(project=self.api_key)
+        frames = []
+        for r in plants_with_coordinates().itertuples():
+            pt = ee.Geometry.Point(float(r.lon), float(r.lat))
+            core = pt.buffer(PLUME_CORE_M)
+            ring = pt.buffer(PLUME_RING_OUT_M).difference(pt.buffer(PLUME_RING_IN_M))
+
+            def stats(img, core=core, ring=ring):
+                scl = img.select("SCL")
+                cloud = scl.eq(8).Or(scl.eq(9)).rename("c")
+                mean, count = ee.Reducer.mean(), ee.Reducer.count()
+                return ee.Feature(
+                    None,
+                    {
+                        "time": img.get("system:time_start"),
+                        "product_id": img.get("PRODUCT_ID"),
+                        "core_cloud_frac": cloud.reduceRegion(mean, core, SCALE_M).get("c"),
+                        "ring_cloud_frac": cloud.reduceRegion(mean, ring, SCALE_M).get("c"),
+                        "core_px": cloud.reduceRegion(count, core, SCALE_M).get("c"),
+                        "ring_px": cloud.reduceRegion(count, ring, SCALE_M).get("c"),
+                    },
+                )
+
+            col = (
+                ee.ImageCollection(PLUME_COLLECTION)
+                .filterBounds(pt)
+                .filterDate(start.isoformat(), (end + dt.timedelta(days=1)).isoformat())
+            )
+            fc = ee.FeatureCollection(col.map(stats)).getInfo()
+            frames.append(plume_to_canonical(fc["features"], r.plant_id))
+        return pd.concat(frames, ignore_index=True) if frames else pd.DataFrame(columns=COLUMNS)

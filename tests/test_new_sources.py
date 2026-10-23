@@ -321,3 +321,19 @@ def test_landsat_scene_features_to_rows():
     assert len(df) == len(STATS) - 1  # no clear pixel in the disc: the mean is left out
     assert df.series_id.str.startswith("LS.NL-SLUISK.").all()
     assert set(df.unit) == {"K", "share"}
+
+
+def test_plume_scene_features_to_rows():
+    from nsqueeze.io.sources.sentinel2 import PLUME_STATS, plume_to_canonical
+
+    props = {s: 0.2 for s in PLUME_STATS} | {"time": 1659524220339, "core_px": None}
+    df = plume_to_canonical([{"properties": props}], "NL-SLUISK")
+    assert len(df) == len(PLUME_STATS) - 1
+    assert df.series_id.str.startswith("S2P.NL-SLUISK.").all()
+
+
+def test_plant_weather_points_are_the_plants():
+    from nsqueeze.io.sources.openmeteo import OpenMeteoPlantWeather
+
+    pts = OpenMeteoPlantWeather().points()
+    assert list(pts.columns) == ["geo", "lat", "lon"] and pts.geo.str.contains("-").all()
