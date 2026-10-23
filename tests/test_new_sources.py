@@ -360,3 +360,38 @@ def test_firms_keeps_detections_near_plants_only():
     out = near_plants(det, plants, "VIIRS_SNPP_SP")
     assert len(out) == 1 and abs(out.value.iloc[0] - 0.5) < 0.01
     assert str(out.observed_at.iloc[0]) == "2022-01-10 01:04:00"
+
+
+def test_firms_one_row_per_overpass_keeps_nearest():
+    import json
+
+    import pandas as pd
+
+    from nsqueeze.io.sources.firms import near_plants
+
+    plants = pd.DataFrame({"plant_id": ["P"], "lat": [50.0], "lon": [10.0]})
+    det = pd.DataFrame(
+        {
+            "latitude": [50.027, 50.0045],  # about 3 km and 0.5 km, same overpass
+            "longitude": [10.0, 10.0],
+            "acq_date": ["2022-01-10"] * 2,
+            "acq_time": [104, 104],
+            "daynight": ["N", "N"],
+            "frp": [2.0, 1.0],
+        }
+    )
+    out = near_plants(det, plants, "VIIRS_SNPP_SP")
+    assert len(out) == 1 and abs(out.value.iloc[0] - 0.5) < 0.01
+    meta = json.loads(out.meta.iloc[0])
+    assert (meta["n_5km"], meta["n_1km"], meta["daynight"]) == (2, 1, "N")
+
+
+def test_plume_keeps_the_best_covering_tile():
+    from nsqueeze.io.sources.sentinel2 import plume_to_canonical
+
+    base = {"time": 1659524220339, "core_cloud_frac": 0.0, "ring_cloud_frac": 0.0}
+    partial = base | {"core_px": 100.0, "ring_px": 900.0, "core_cloud_frac": 0.9}
+    full = base | {"core_px": 1942.0, "ring_px": 52446.0, "core_cloud_frac": 0.1}
+    df = plume_to_canonical([{"properties": partial}, {"properties": full}], "P")
+    core = df[df.series_id == "S2P.P.core_cloud_frac"]
+    assert len(core) == 1 and core.value.iloc[0] == 0.1

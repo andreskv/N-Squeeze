@@ -5,9 +5,10 @@ Area API, one request per 5 days over a box around the plant panel. The standard
 after it. One satellite only, so the detection rate does not change when NOAA-20 and NOAA-21
 start. Needs ``FIRMS_MAP_KEY`` (free).
 
-I keep every detection within 5 km of a plant point: one row per detection and plant, value =
-distance in km, with day/night flag, type, confidence and FRP in ``meta``. The 1 km night count
-is applied later, in the open.
+One row per plant and overpass (the store keeps one value per series and time): value = the
+distance in km of the nearest detection within 5 km of the plant point. ``meta`` has the day/night
+flag, the number of detections within 5 km and within 1 km, and the largest FRP. The 1 km night
+count is applied later, in the open.
 """
 
 from __future__ import annotations
@@ -31,7 +32,7 @@ EARTH_KM = 6371.0
 
 
 def near_plants(det: pd.DataFrame, plants: pd.DataFrame, source: str) -> pd.DataFrame:
-    """Detections within KEEP_KM of a plant → canonical rows ``FIRMS.<plant>``."""
+    """Detections within KEEP_KM of a plant → one row per plant and overpass, ``FIRMS.<plant>``."""
     if det.empty:
         return pd.DataFrame(columns=COLUMNS)
     la0, lo0 = (
@@ -44,21 +45,32 @@ def near_plants(det: pd.DataFrame, plants: pd.DataFrame, source: str) -> pd.Data
     )
     a = np.sin((la - la0) / 2) ** 2 + np.cos(la0) * np.cos(la) * np.sin((lo - lo0) / 2) ** 2
     km = 2 * EARTH_KM * np.arcsin(np.sqrt(a))
+    i, j = np.nonzero(km <= KEEP_KM)
+    if len(i) == 0:
+        return pd.DataFrame(columns=COLUMNS)
+    d = det.iloc[j].reset_index(drop=True)
+    hits = pd.DataFrame(
+        {
+            "series_id": "FIRMS." + plants.plant_id.iloc[i].reset_index(drop=True),
+            "observed_at": pd.to_datetime(
+                d.acq_date + " " + d.acq_time.astype(int).map("{:04d}".format),
+                format="%Y-%m-%d %H%M",
+            ),
+            "km": km[i, j],
+            "daynight": d.daynight,
+            "frp": d.frp,
+        }
+    )
     rows = []
-    for i, j in zip(*np.nonzero(km <= KEEP_KM), strict=True):
-        d = det.iloc[j]
-        t = pd.to_datetime(f"{d.acq_date} {int(d.acq_time):04d}", format="%Y-%m-%d %H%M")
-        meta = {k: d[k] for k in ("daynight", "type", "confidence", "frp") if k in d}
-        meta |= {"source": source, "lat": float(d.latitude), "lon": float(d.longitude)}
-        rows.append(
-            (
-                f"FIRMS.{plants.plant_id.iloc[i]}",
-                t,
-                float(km[i, j]),
-                "km",
-                json.dumps(meta, default=str),
-            )
-        )
+    for (sid, t), g in hits.groupby(["series_id", "observed_at"]):
+        meta = {
+            "daynight": g.daynight.iloc[0],
+            "n_5km": len(g),
+            "n_1km": int((g.km <= 1.0).sum()),
+            "max_frp": float(g.frp.max()),
+            "source": source,
+        }
+        rows.append((sid, t, float(g.km.min()), "km", json.dumps(meta)))
     return pd.DataFrame(rows, columns=COLUMNS)
 
 
