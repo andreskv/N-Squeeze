@@ -71,7 +71,7 @@ async def run() -> None:
                     writer.write(msg if isinstance(msg, str) else msg.decode())
                     if stop.is_set():
                         break
-        except (OSError, websockets.ConnectionClosed) as exc:
+        except (OSError, websockets.WebSocketException) as exc:  # also a rejected handshake (503)
             print(f"{dt.datetime.now(dt.UTC):%H:%M:%S} reconnect in {backoff}s: {exc}")
             await asyncio.sleep(backoff)
             backoff = min(backoff * 2, 300)
