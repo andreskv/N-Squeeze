@@ -90,6 +90,44 @@ def p_on(margin, month, c: float, r: float, **kw) -> np.ndarray:
     return np.array([o.sum() for o, _ in msgs])
 
 
+def p_on_smoothed(margin, month, c: float, r: float, **kw) -> np.ndarray:
+    """Smoothed P(on) per month at one (c, r): what all the data imply (forward-backward).
+
+    The backward pass mirrors the forward transitions; the observations of month t + 1 (the
+    forced-off constraint and the December total) weight the backward message of month t.
+    """
+    _, msgs = forward(margin, month, np.asarray(c), np.asarray(r), keep=True, **kw)
+    off, annual, year, q, sigma = kw["off"], kw["annual"], kw["year"], kw["q"], kw["sigma"]
+    tau = kw["tau"]
+    n = len(margin)
+    b_on, b_of = np.ones(K), np.ones(K)
+    out = np.empty(n)
+    for t in range(n - 1, -1, -1):
+        a_on, a_of = msgs[t]
+        w_on, w_of = (a_on * b_on).sum(), (a_of * b_of).sum()
+        out[t] = w_on / (w_on + w_of)
+        if t == 0:
+            break
+        e_on = np.zeros(K) if off[t] else np.ones(K)  # observations of month t
+        e_of = np.ones(K)
+        if month[t] == 12 and np.isfinite(annual.get(year[t], np.nan)):
+            ll = -0.5 * ((annual[year[t]] - q * np.arange(K)) / (sigma * 12 * q)) ** 2
+            like = np.exp(ll - ll.max())
+            e_on, e_of = e_on * like, e_of * like
+        v_on, v_of = e_on * b_on, e_of * b_of
+        m = margin[t - 1]
+        ps, pr = _sigmoid((c - m) / tau), _sigmoid((m - r) / tau)
+        if month[t] == 1:  # the count restarts: every k of December leads to k = 0 or 1
+            b_on = np.full(K, (1 - ps) * v_on[1] + ps * v_of[0])
+            b_of = np.full(K, pr * v_on[1] + (1 - pr) * v_of[0])
+        else:
+            up = np.append(v_on[1:], 0.0)  # on next month: k + 1
+            b_on, b_of = (1 - ps) * up + ps * v_of, pr * up + (1 - pr) * v_of
+        s = max(b_on.max(), b_of.max(), 1e-300)
+        b_on, b_of = b_on / s, b_of / s
+    return out
+
+
 def fit_plant(
     margin: pd.Series,
     *,
@@ -119,4 +157,7 @@ def fit_plant(
         "loglik": ll[i, j],
         "surface": ll,
         "p_on": p_on(margin.to_numpy(), margin.index.month.to_numpy(), grid[i], grid[j], **kw),
+        "p_on_smoothed": p_on_smoothed(
+            margin.to_numpy(), margin.index.month.to_numpy(), grid[i], grid[j], **kw
+        ),
     }
