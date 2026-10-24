@@ -45,8 +45,11 @@ $jobs = @(
   @{ Source = "eurostat_population"; At = "07:20"; Weekly = $true; Days = 800 },
   @{ Source = "eurostat_gas_trade"; At = "07:25"; Weekly = $true; Days = 400 },
   @{ Source = "s2_swir"; At = "07:40"; Weekly = $true; Days = 21 },
+  @{ Source = "eurostat_c2015"; At = "07:35"; Weekly = $true; Days = 800 },
+  @{ Source = "ets_registry"; At = "07:45"; Weekly = $true; Days = 4400 },  # one file a year (April); vintages kept
   @{ Source = "fan_chart"; At = "2027-01-04 09:30"; Weekly = $true },  # first entry; after the 08:30 AGSI+ update
-  # Live AIS stream: starts at log-on and runs until the task is disabled
+  # Live AIS stream: starts at log-on (or boot) and runs until the task is disabled. Unattended, it is
+  # also started every hour; Task Scheduler ignores the start while the stream already runs
   @{ Source = "ais"; AtLogOn = $true }
 )
 
@@ -56,7 +59,10 @@ foreach ($j in $jobs) {
   $action = New-ScheduledTaskAction -Execute "powershell.exe" `
     -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$runner`" -Source $($j.Source) -Days $days" `
     -WorkingDirectory $Repo
-  $trigger = if ($j.AtLogOn -and $Unattended) { New-ScheduledTaskTrigger -AtStartup }
+  $trigger = if ($j.AtLogOn -and $Unattended) {
+               @((New-ScheduledTaskTrigger -AtStartup),
+                 (New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Hours 1)))
+             }
              elseif ($j.AtLogOn) { New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME }
              elseif ($j.Weekly) { New-ScheduledTaskTrigger -Weekly -DaysOfWeek Monday -At $j.At }
              else { New-ScheduledTaskTrigger -Daily -At $j.At }
