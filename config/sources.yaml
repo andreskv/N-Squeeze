@@ -142,6 +142,16 @@ eurostat_c2015:
   verified: true   # API call checked 2026-10-24: DE, EL, ES, FR, IT, NL from 2019-01 to 2026-08
   phase: 3
 
+gfw_presence:
+  name: Global Fishing Watch AIS presence by vessel and month in each coastal plant's berth zone (4Wings report, public-global-presence)
+  layer: plant_activity
+  portal: https://globalfishingwatch.org/our-apis/documentation/docs/v3/4wings/report
+  frequency: monthly (revised; vintages kept)
+  auth: { env: GFW_API_TOKEN }
+  recoverable: true
+  verified: true   # report checked 2026-10-25 at Sluiskil; non-commercial use only
+  phase: 3
+
 s5p_no2:
   name: Sentinel-5P TROPOMI tropospheric NO2, weekly, disc and ring around each plant (Google Earth Engine)
   layer: plant_activity

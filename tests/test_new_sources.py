@@ -444,3 +444,28 @@ def test_s5p_week_rows_one_per_plant_and_area():
     assert df.series_id.tolist() == ["S5P.RO-TARGUM.disc", "S5P.RO-TARGUM.ring"]
     assert (df.observed_at == pd.Timestamp("2022-01-03")).all()
     assert json.loads(df.meta[0])["n_obs"] == 4.3
+
+
+def test_gfw_presence_rows_one_per_vessel_and_month():
+    import pandas as pd
+
+    from nsqueeze.io.sources.gfw import to_canonical, zones
+
+    rows = [
+        {
+            "vesselId": "v1",
+            "date": "2022-04",
+            "hours": 31,
+            "imo": "9734836",
+            "shipName": "YARA KARA",
+            "geartype": "TANKER",
+            "speed": 0.08,
+        },
+        {"vesselId": "v1", "date": "2022-05", "hours": 12, "imo": "9734836"},
+        {"vesselId": None, "date": "2022-05", "hours": 3},
+    ]
+    df = to_canonical(rows, "NL-SLUISK")
+    assert df.series_id.tolist() == ["GFWP.NL-SLUISK.v1"] * 2
+    assert df.observed_at.tolist() == [pd.Timestamp("2022-04-01"), pd.Timestamp("2022-05-01")]
+    assert json.loads(df.meta[0])["shipName"] == "YARA KARA"
+    assert {z["properties"]["plant_id"] for z in zones()} >= {"NL-SLUISK", "PL-POLICE"}
