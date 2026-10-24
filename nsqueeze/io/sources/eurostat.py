@@ -184,6 +184,16 @@ class EurostatPopulation(_EurostatStats):
         return f"{start:%Y}"
 
 
+class EurostatFertiliserIndex(_EurostatStats):
+    # Monthly production index for NACE C20.15 (fertilisers and nitrogen compounds), calendar
+    # adjusted. Several countries keep it confidential; Greece has one ammonia plant.
+    name = "eurostat_c2015"
+    dataset = "sts_inpr_m"
+    fixed: ClassVar[dict[str, str]] = {"nace_r2": "C2015", "s_adj": "CA", "unit": "I21"}
+    prefix = "ESTAT.IPI.C2015"
+    unit = "index 2021=100"
+
+
 class EurostatHDD(_EurostatStats):
     name = "eurostat_hdd"
     dataset = "nrg_chdd_m"

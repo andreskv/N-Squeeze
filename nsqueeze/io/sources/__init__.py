@@ -11,6 +11,7 @@ from nsqueeze.io.sources.entsog import ENTSOGFlows
 from nsqueeze.io.sources.ets import ETSVerifiedEmissions
 from nsqueeze.io.sources.eurostat import (
     Comext,
+    EurostatFertiliserIndex,
     EurostatGasTrade,
     EurostatHDD,
     EurostatHDDNuts2,
@@ -51,6 +52,7 @@ REGISTRY: dict[str, type[Source]] = {
         EurostatHDDNuts2,
         EurostatPopulationNuts2,
         EurostatGasTrade,
+        EurostatFertiliserIndex,
         OpenMeteoWeather,
         PortWatch,
         Sentinel2SWIR,

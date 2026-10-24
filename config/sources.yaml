@@ -132,6 +132,16 @@ s2_plume:
   verified: true   # checked on a site outside the panel 2026-10-23
   phase: 3
 
+eurostat_c2015:
+  name: Eurostat monthly production index, NACE C20.15 fertilisers and nitrogen compounds (sts_inpr_m, calendar adjusted, 2021=100)
+  layer: plant_activity
+  portal: https://ec.europa.eu/eurostat/databrowser/view/sts_inpr_m/default/table
+  frequency: monthly (revised; vintages kept)
+  auth: none
+  recoverable: false
+  verified: true   # API call checked 2026-10-24: DE, EL, ES, FR, IT, NL from 2019-01 to 2026-08
+  phase: 3
+
 s5p_no2:
   name: Sentinel-5P TROPOMI tropospheric NO2, weekly, disc and ring around each plant (Google Earth Engine)
   layer: plant_activity
