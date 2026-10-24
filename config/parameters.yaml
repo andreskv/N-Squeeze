@@ -242,6 +242,16 @@ plant_activity:
     grade: B
     source: Earth Engine catalog, Cloud Score+ S2_HARMONIZED - example threshold 0.60; values between 0.50 and 0.65 generally work well
     url: https://developers.google.com/earth-engine/datasets/catalog/GOOGLE_CLOUD_SCORE_PLUS_V1_S2_HARMONIZED
+  no2_disc_radius_m:
+    value: 5000
+    unit: m
+    grade: C
+    basis: Judgement - holds the plant and the TROPOMI pixel that contains it (3.5 x 5.5 km); fixed before any NO2 statistic, first and only radius tried
+  no2_ring_m:
+    value: [20000, 40000]
+    unit: m
+    grade: C
+    basis: Judgement - regional background on the same days, outside the plant's own pixels; fixed before any NO2 statistic, first and only ring tried
 
 regime:
   # Chokepoint regime R(t) thresholds. Rules fixed 16 Oct 2026, before the values were computed; data 2019-2025 only

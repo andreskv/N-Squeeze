@@ -423,3 +423,19 @@ def test_plume_keeps_the_best_covering_tile():
     df = plume_to_canonical([{"properties": partial}, {"properties": full}], "P")
     core = df[df.series_id == "S2P.P.core_cloud_frac"]
     assert len(core) == 1 and core.value.iloc[0] == 0.1
+
+
+def test_s5p_week_rows_one_per_plant_and_area():
+    import pandas as pd
+
+    from nsqueeze.io.sources.sentinel5p import week_to_canonical
+
+    feats = [
+        {"properties": {"plant_id": "RO-TARGUM", "area": "disc", "no2": 6e-5, "n_obs": 4.3}},
+        {"properties": {"plant_id": "RO-TARGUM", "area": "ring", "no2": 3e-5, "n_obs": 4.1}},
+        {"properties": {"plant_id": "HR-KUTINA", "area": "disc", "no2": None, "n_obs": 0}},
+    ]
+    df = week_to_canonical(feats, pd.Timestamp("2022-01-03"))
+    assert df.series_id.tolist() == ["S5P.RO-TARGUM.disc", "S5P.RO-TARGUM.ring"]
+    assert (df.observed_at == pd.Timestamp("2022-01-03")).all()
+    assert json.loads(df.meta[0])["n_obs"] == 4.3

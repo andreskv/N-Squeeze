@@ -132,6 +132,16 @@ s2_plume:
   verified: true   # checked on a site outside the panel 2026-10-23
   phase: 3
 
+s5p_no2:
+  name: Sentinel-5P TROPOMI tropospheric NO2, weekly, disc and ring around each plant (Google Earth Engine)
+  layer: plant_activity
+  portal: https://developers.google.com/earth-engine/datasets/catalog/COPERNICUS_S5P_OFFL_L3_NO2
+  frequency: weekly (ISO week)
+  auth: { env: GEE_PROJECT }
+  recoverable: true
+  verified: false
+  phase: 3
+
 eua_auctions:
   name: EEX EUA primary-auction results (2012 → today)
   layer: nitrogen_cost_model
