@@ -26,10 +26,15 @@ from nsqueeze.io.sources.base import Source
 
 URL = "https://transparency.entsog.eu/api/v1/operationaldatas"
 META = ("pointLabel", "pointType", "operatorLabel", "flowStatus", "lastUpdateDateTime")
+FLOW_STATUS_RANK = {"Confirmed": 0, "Provisional": 1}
 
 
 def to_canonical(rows: list[dict]) -> pd.DataFrame:
-    """One row per (operator, point, direction, gas day). Gas day = local date of periodFrom."""
+    """One row per (operator, point, direction, gas day). Gas day = local date of periodFrom.
+
+    Some points report a day twice, as "Confirmed" and as "Provisional". I keep the confirmed
+    value, then the provisional one, then a row with no status."""
+    rows = sorted(rows, key=lambda r: FLOW_STATUS_RANK.get(r.get("flowStatus"), 2))
     out = [
         {
             "series_id": f"ENTSOG.{r['operatorKey']}.{r['pointKey']}.{r['directionKey']}",
@@ -41,7 +46,8 @@ def to_canonical(rows: list[dict]) -> pd.DataFrame:
         for r in rows
         if r.get("value") is not None and r.get("pointKey")
     ]
-    return pd.DataFrame(out, columns=["series_id", "observed_at", "value", "unit", "meta"])
+    df = pd.DataFrame(out, columns=["series_id", "observed_at", "value", "unit", "meta"])
+    return df.drop_duplicates(["series_id", "observed_at"]).reset_index(drop=True)
 
 
 class ENTSOGFlows(Source):

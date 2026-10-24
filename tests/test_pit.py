@@ -48,3 +48,10 @@ def test_writes_never_overwrite(tmp_path):
 def test_rejects_non_canonical_frames(tmp_path):
     with pytest.raises(ValueError, match="canonical"):
         PITStore(tmp_path).write("agsi", pd.DataFrame({"x": [1]}))
+
+
+def test_rejects_two_rows_with_one_key(tmp_path):
+    f = _frame(80.0).assign(observed_at="2026-10-01")
+    with pytest.raises(ValueError, match="share a"):
+        PITStore(tmp_path).write("agsi", f)
+    assert not list(tmp_path.rglob("*.parquet"))

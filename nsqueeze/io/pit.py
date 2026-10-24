@@ -56,6 +56,13 @@ class PITStore:
         df["observed_at"] = pd.to_datetime(df["observed_at"])
         df["value"] = pd.to_numeric(df["value"], errors="coerce").astype("float64")
         df["retrieved_at"] = pd.Timestamp(ts).tz_localize(None)  # stored as naive UTC
+        dup = df.duplicated(["series_id", "observed_at"], keep=False)
+        if dup.any():  # a read keeps one row per key, so the others would be lost
+            first = df[dup].iloc[0]
+            raise ValueError(
+                f"{source}: {int(dup.sum())} rows share a (series_id, observed_at) key, "
+                f"for example {first.series_id} at {first.observed_at}. Write one row per key"
+            )
 
         part = self.root / f"source={source}" / f"retrieved_date={ts.date().isoformat()}"
         part.mkdir(parents=True, exist_ok=True)

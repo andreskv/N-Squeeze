@@ -59,6 +59,23 @@ def test_entsog_gas_day_and_series_id():
     assert json.loads(df.meta[0])["pointType"] == "LNG Entry point"
 
 
+def test_entsog_keeps_the_confirmed_value_of_a_day():
+    day = {
+        "operatorKey": "UK-TSO-0001",
+        "pointKey": "ITP-00022",
+        "directionKey": "entry",
+        "periodFrom": "2021-05-28T06:00:00+02:00",
+        "unit": "kWh/d",
+    }
+    rows = [
+        day | {"value": 1, "flowStatus": "Provisional"},
+        day | {"value": 2, "flowStatus": "Confirmed"},
+        day | {"value": 2, "flowStatus": "Confirmed"},
+    ]
+    df = entsog_src.to_canonical(rows)
+    assert df.value.tolist() == [2]
+
+
 def test_portwatch_and_openmeteo_canonical():
     feats = [
         {
