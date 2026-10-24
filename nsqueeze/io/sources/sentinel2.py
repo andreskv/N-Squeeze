@@ -45,10 +45,22 @@ def plants_with_coordinates() -> pd.DataFrame:
     return p.dropna(subset=["lat", "lon"])
 
 
+def best_tiles(features: list[dict], px: list[str]) -> list[dict]:
+    """One feature per sensing time. Overlapping tiles of one datatake share a sensing time and
+    the store keeps one value per series and time, so I keep the tile with the most pixels."""
+    best: dict = {}
+    for f in features:
+        p = f["properties"]
+        n = sum(p.get(k) or 0 for k in px)
+        if p["time"] not in best or n > best[p["time"]][0]:
+            best[p["time"]] = (n, f)
+    return [f for _, f in best.values()]
+
+
 def to_canonical(features: list[dict], plant_id: str) -> pd.DataFrame:
     """Earth Engine feature properties (one feature per scene) → canonical rows."""
     rows = []
-    for f in features:
+    for f in best_tiles(features, ["n_px"]):
         p = f["properties"]
         t = pd.to_datetime(p["time"], unit="ms")
         meta = json.dumps({"product_id": p.get("product_id")})
@@ -124,17 +136,10 @@ PLUME_STATS = {
 
 
 def plume_to_canonical(features: list[dict], plant_id: str) -> pd.DataFrame:
-    """Scene features → canonical rows ``S2P.<plant>.<stat>``. Overlapping tiles of one datatake
-    share a sensing time; the store keeps one value per series and time, so I keep the tile with
-    the most pixels in the two areas."""
-    best: dict = {}
-    for f in features:
-        p = f["properties"]
-        px = (p.get("core_px") or 0) + (p.get("ring_px") or 0)
-        if p["time"] not in best or px > best[p["time"]][0]:
-            best[p["time"]] = (px, f)
+    """Scene features → canonical rows ``S2P.<plant>.<stat>``, one tile per sensing time (the
+    most pixels in the two areas)."""
     rows = []
-    for _, f in best.values():
+    for f in best_tiles(features, ["core_px", "ring_px"]):
         p = f["properties"]
         t = pd.to_datetime(p["time"], unit="ms")
         meta = json.dumps({"product_id": p.get("product_id")})

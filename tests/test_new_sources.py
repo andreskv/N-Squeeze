@@ -309,6 +309,17 @@ def test_sentinel2_scene_features_to_rows():
     assert str(df.observed_at.iloc[0]) == "2022-08-03 10:57:00.339000"
 
 
+def test_sentinel2_overlapping_tiles_keep_the_fuller_one():
+    from nsqueeze.io.sources.sentinel2 import STATS, to_canonical
+
+    base = {s: 0.5 for s in STATS} | {"time": 1659524220339}
+    edge = base | {"product_id": "EDGE", "n_px": 40.0}
+    full = base | {"product_id": "FULL", "n_px": 700.0}
+    df = to_canonical([{"properties": full}, {"properties": edge}], "NL-SLUISK")
+    assert len(df) == len(STATS) and not df.duplicated(["series_id", "observed_at"]).any()
+    assert df.meta.str.contains("FULL").all()
+
+
 def test_landsat_scene_features_to_rows():
     from nsqueeze.io.sources.landsat import STATS, to_canonical
 
