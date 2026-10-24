@@ -1,4 +1,4 @@
-"""EU ETS verified emissions per stationary installation, 2008 onward (key-free).
+"""EU ETS verified emissions and free allocation per stationary installation, 2008 on (no key).
 
 The Commission publishes one compliance file a year on its Union Registry page,
 ``verified_emissions_<year>_en.xlsx``. The latest file holds every year since 2008, one
@@ -8,7 +8,9 @@ ammonia production, 38 nitric acid; integrated chemical sites often report under
 another code, so the archive keeps every installation and plant matching happens later.
 
 "Excluded" (out of scope that year) and blank cells are not emissions and are dropped.
-Values are tonnes CO2-equivalent.
+Values are tonnes CO2-equivalent. Free allocation (``ALLOCATION_<year>``, in allowances) is kept as
+its own series: since 2021 it is adjusted when an installation's activity level changes, so it
+also carries information on output.
 """
 
 from __future__ import annotations
@@ -18,6 +20,7 @@ import io
 import json
 import re
 
+import numpy as np
 import pandas as pd
 
 from nsqueeze.io.sources.base import Source
@@ -37,12 +40,13 @@ def latest_link(html: str) -> tuple[str, int]:
 
 
 def to_canonical(xlsx: bytes) -> pd.DataFrame:
-    """Stationary installations × years → canonical rows. Series ``ETS.<registry>.<id>``."""
+    """Stationary installations × years → canonical rows: verified emissions ``ETS.<registry>.<id>``
+    and free allocation ``ETSALLOC.<registry>.<id>``."""
     readme = pd.read_excel(io.BytesIO(xlsx), "Read Me", header=None, nrows=1)
     extracted = str(pd.Timestamp(readme.iloc[0, 1]).date())
     d = pd.read_excel(io.BytesIO(xlsx), "data", header=2)
     d = d[d.ACCOUNT_TYPE == "OPERATOR HOLDING ACCOUNT"]
-    years = [c for c in d.columns if re.fullmatch(r"VERIFIED_EMISSIONS_\d{4}", str(c))]
+    years = [c for c in d.columns if re.fullmatch(r"(VERIFIED_EMISSIONS|ALLOCATION)_\d{4}", str(c))]
     long = d.melt(
         id_vars=["REGISTRY_CODE", "INSTALLATION_IDENTIFIER", "INSTALLATION_NAME",
                  "MAIN_ACTIVITY_TYPE_CODE", "PERMIT_IDENTIFIER"],
@@ -63,10 +67,13 @@ def to_canonical(xlsx: bytes) -> pd.DataFrame:
     keys = list(zip(long.REGISTRY_CODE, long.INSTALLATION_IDENTIFIER, strict=True))
     return pd.DataFrame(
         {
-            "series_id": [f"ETS.{r}.{i}" for r, i in keys],
+            "series_id": [
+                f"{'ETSALLOC' if c.startswith('ALLOC') else 'ETS'}.{r}.{i}"
+                for (r, i), c in zip(keys, long.col, strict=True)
+            ],
             "observed_at": pd.to_datetime(long.col.str[-4:] + "-01-01").to_numpy(),
             "value": long.value.to_numpy(),
-            "unit": "tCO2e",
+            "unit": np.where(long.col.str.startswith("ALLOC"), "EUA", "tCO2e"),
             "meta": [meta[k] for k in keys],
         },
         columns=COLUMNS,

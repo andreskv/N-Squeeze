@@ -221,9 +221,9 @@ def test_ets_verified_emissions_parse():
         "ACCOUNT_TYPE",
     ]
     rows = [
-        ["AT", "x", "Ammoniakanlage", 205363, "P1", 41, 0, 700000, "Excluded",
+        ["AT", "x", "Ammoniakanlage", 205363, "P1", 41, 650000, 700000, "Excluded",
          "OPERATOR HOLDING ACCOUNT"],
-        ["DE", "y", "Kraftwerk", 7, "P2", 20, 0, None, 1200, "OPERATOR HOLDING ACCOUNT"],
+        ["DE", "y", "Kraftwerk", 7, "P2", 20, None, None, 1200, "OPERATOR HOLDING ACCOUNT"],
         ["FR", "z", "Airline", 9, "", 10, 0, 50, 60, "AIRCRAFT OPERATOR HOLDING ACCOUNT"],
     ]  # fmt: skip
     buf = io.BytesIO()
@@ -236,7 +236,12 @@ def test_ets_verified_emissions_parse():
         )
     df = ets.to_canonical(buf.getvalue())
     got = {(s, d.year): v for s, d, v in zip(df.series_id, df.observed_at, df.value, strict=True)}
-    assert got == {("ETS.AT.205363", 2025): 700000, ("ETS.DE.7", 2024): 1200}  # no aircraft
+    assert got == {  # no aircraft; a blank allocation is no row
+        ("ETS.AT.205363", 2025): 700000,
+        ("ETS.DE.7", 2024): 1200,
+        ("ETSALLOC.AT.205363", 2025): 650000,
+    }
+    assert set(df[df.series_id.str.startswith("ETSALLOC")].unit) == {"EUA"}
     assert json.loads(df.meta[0]) == {
         "name": "Ammoniakanlage", "activity": 41, "permit": "P1", "extracted": "2026-04-01"
     }  # fmt: skip
