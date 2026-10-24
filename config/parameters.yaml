@@ -70,6 +70,13 @@ carbon:
     grade: C
     basis: My reading of the EU MRR
     open_item: OI-08
+  ets_benchmark_ammonia_2021_2025:
+    value: 1.570
+    unit: allowances/t_NH3
+    grade: B
+    source: IR (EU) 2021/447 Annex, product benchmark 'Ammonia', column 'Benchmark value (allowances/t) for 2021-2025'; read from a mirror of the EUR-Lex text
+    url: https://eur-lex.europa.eu/eli/reg_impl/2021/447/oj
+    open_item: OI-48
 
 us_cost:
   h_cf_mmbtu_per_t:
