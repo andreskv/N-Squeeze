@@ -23,3 +23,18 @@ def test_recovers_stop_and_restart_thresholds_from_annual_totals():
     )
     assert abs(fit["c"] - c_true) <= 50 and abs(fit["r"] - r_true) <= 50
     assert fit["p_on"][on.to_numpy()].mean() > 0.8 and fit["p_on"][~on.to_numpy()].mean() < 0.3
+
+
+def test_a_missing_annual_value_is_skipped_not_nan():
+    idx = pd.date_range("2016-01-01", "2017-12-01", freq="MS")
+    margin = pd.Series(100.0, index=idx)
+    fit = fit_plant(
+        margin,
+        annual={2016: 12000.0, 2017: float("nan")},
+        q=1000.0,
+        off=pd.Series(False, index=idx),
+        tau=5.0,
+        sigma=0.1,
+        grid=np.array([-100.0, 0.0]),
+    )
+    assert np.isfinite(fit["loglik"])

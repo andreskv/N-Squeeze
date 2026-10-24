@@ -71,7 +71,7 @@ def forward(
                 on = new_on
         if off[t]:
             on = np.zeros_like(on)
-        if month[t] == 12 and year[t] in annual:
+        if month[t] == 12 and np.isfinite(annual.get(year[t], np.nan)):
             ll = -0.5 * ((annual[year[t]] - q * np.arange(K)) / sd) ** 2
             loglik += ll.max()  # scale out the largest term, so the product cannot underflow
             like = np.exp(ll - ll.max())
