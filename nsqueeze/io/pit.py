@@ -113,5 +113,28 @@ class PITStore:
         with duckdb.connect() as con:
             return con.execute(sql).df()
 
+    def duplicate_keys(
+        self, source: str, *, as_of: dt.datetime | str | None = None
+    ) -> pd.DataFrame:
+        """Rows that repeat a key inside one retrieval.
+
+        A later vintage is a revision and is allowed. Two rows with one key in one
+        retrieval are not: ``read`` would silently keep one of them.
+        """
+        cutoff = pd.Timestamp(as_of or dt.datetime.now(dt.UTC))
+        if cutoff.tzinfo is not None:
+            cutoff = cutoff.tz_convert("UTC").tz_localize(None)
+        sql = f"""
+            SELECT retrieved_at, series_id, observed_at, count(*) AS n_rows
+            FROM read_parquet('{self._glob(source)}', hive_partitioning = true,
+                              union_by_name = true)
+            WHERE retrieved_at <= ?
+            GROUP BY retrieved_at, series_id, observed_at
+            HAVING count(*) > 1
+            ORDER BY retrieved_at, series_id, observed_at
+        """
+        with duckdb.connect() as con:
+            return con.execute(sql, [cutoff.to_pydatetime()]).df()
+
     def sources(self) -> list[str]:
         return sorted(p.name.split("=", 1)[1] for p in self.root.glob("source=*") if p.is_dir())

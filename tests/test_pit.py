@@ -55,3 +55,15 @@ def test_rejects_two_rows_with_one_key(tmp_path):
     with pytest.raises(ValueError, match="share a"):
         PITStore(tmp_path).write("agsi", f)
     assert not list(tmp_path.rglob("*.parquet"))
+
+
+def test_duplicate_keys_reports_rows_that_repeat_a_key_in_one_retrieval(tmp_path):
+    store = PITStore(tmp_path)
+    t = dt.datetime(2026, 10, 3, 6, 0, tzinfo=dt.UTC)
+    store.write("agsi", _frame(80.0).iloc[[0]], retrieved_at=t)
+    store.write("agsi", _frame(81.0).iloc[[0]], retrieved_at=t)
+    dups = store.duplicate_keys("agsi", as_of=t)
+    assert len(dups) == 1
+    assert dups.iloc[0].series_id == "AGSI.EU.full"
+    assert int(dups.iloc[0].n_rows) == 2
+    assert store.duplicate_keys("agsi", as_of=dt.datetime(2026, 10, 2, tzinfo=dt.UTC)).empty
