@@ -469,3 +469,15 @@ def test_gfw_presence_rows_one_per_vessel_and_month():
     assert df.observed_at.tolist() == [pd.Timestamp("2022-04-01"), pd.Timestamp("2022-05-01")]
     assert json.loads(df.meta[0])["shipName"] == "YARA KARA"
     assert {z["properties"]["plant_id"] for z in zones()} >= {"NL-SLUISK", "PL-POLICE"}
+
+
+def test_gfw_presence_fetch_starts_on_the_first_of_the_month(monkeypatch):
+    import datetime as dt
+
+    from nsqueeze.io.sources.gfw import GFWPresence
+
+    seen = []
+    src = GFWPresence()
+    monkeypatch.setattr(src, "_report", lambda f, start, end: seen.append(start) or [])
+    src.fetch(dt.date(2023, 1, 4), dt.date(2024, 1, 4))
+    assert set(seen) == {dt.date(2023, 1, 1)}

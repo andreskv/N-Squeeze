@@ -74,6 +74,9 @@ class GFWPresence(Source):
         raise AssertionError("unreachable")
 
     def fetch(self, start: dt.date, end: dt.date) -> pd.DataFrame:
+        # Rows are monthly: a range that starts mid-month gives a partial month, and the store
+        # keeps the latest vintage, so a partial row would replace the full one.
+        start = start.replace(day=1)
         frames = [
             to_canonical(self._report(f, start, end), f["properties"]["plant_id"]) for f in zones()
         ]
