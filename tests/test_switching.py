@@ -96,3 +96,35 @@ def test_smoothed_matches_brute_force_enumeration():
         margin, month, c, r, tau=tau, annual=annual, year=year, q=q, sigma=sigma, off=off, p_on0=p0
     )
     assert np.allclose(got, w / total, atol=1e-9)
+
+
+def test_empirical_bayes_recovers_the_covariate_effect():
+    from nsqueeze.plant_activity.switching import empirical_bayes
+
+    idx = pd.date_range("2016-01-01", "2025-12-01", freq="MS")
+    t = np.arange(len(idx))
+    margin = pd.Series(150 - 450 * np.exp(-(((t - 80) / 12.0) ** 2)), index=idx)
+    grid = np.arange(-300.0, 301.0, 25.0)
+    z = np.array([-2.0, -1.0, 0.0, 1.0, 2.0, -1.5, 1.5])
+    surfaces = []
+    for zi in z:  # true stop threshold rises with z: c = -100 + 60 z; restart 100 above
+        c_true, on, state = -100 + 60 * zi, [], True
+        for i in range(len(idx)):
+            m = margin.iloc[i - 1] if i else margin.iloc[0]
+            state = (m > c_true) if state else (m > c_true + 100)
+            on.append(state)
+        on = np.array(on)
+        annual = {y: 1000.0 * on[idx.year == y].sum() for y in range(2016, 2026)}
+        surfaces.append(
+            fit_plant(
+                margin,
+                annual=annual,
+                q=1000.0,
+                off=pd.Series(False, index=idx),
+                tau=10.0,
+                sigma=0.05,
+                grid=grid,
+            )["surface"]
+        )
+    eb = empirical_bayes(surfaces, z, grid, theta0=[0.0, 0.0, np.log(200.0), 100.0, np.log(100.0)])
+    assert eb["theta"][1] > 20  # the covariate effect b is found, with the right sign

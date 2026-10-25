@@ -161,3 +161,75 @@ def fit_plant(
             margin.to_numpy(), margin.index.month.to_numpy(), grid[i], grid[j], **kw
         ),
     }
+
+
+def _log_prior(c, r, z, theta):
+    """log N(c; a + b z, s_c) + log N(r - c; m_band, s_band), on the (c, r) grid; r < c excluded."""
+    a, b, log_sc, m_band, log_sb = theta
+    sc, sb = np.exp(log_sc), np.exp(log_sb)
+    lp = (
+        -0.5 * ((c - a - b * z) / sc) ** 2
+        - np.log(sc)
+        - 0.5 * ((r - c - m_band) / sb) ** 2
+        - np.log(sb)
+    )
+    return np.where(r >= c, lp, -np.inf)
+
+
+def empirical_bayes(
+    surfaces: list[np.ndarray], z: np.ndarray, grid: np.ndarray, theta0, free=(True,) * 5
+) -> dict:
+    """Shared prior on the thresholds, fitted by maximum marginal likelihood over all plants.
+
+    ``surfaces``: one log-likelihood grid over (c, r) per plant (from ``fit_plant``).
+    ``z``: one covariate per plant (centred), 0 where unknown. The marginal likelihood of a
+    plant is the sum over the grid of likelihood × prior, so it is exact on the grid.
+    ``theta0`` = (a, b, log s_c, band mean, log s_band); entries with ``free`` False stay at their
+    starting value (the band is weakly identified when few restarts are observed).
+    Returns the hyperparameters and, per plant, the posterior mean of c and r.
+    """
+    from scipy.optimize import minimize
+    from scipy.special import logsumexp
+
+    c, r = np.meshgrid(grid, grid, indexing="ij")
+    lls = [np.where(np.isfinite(s), s, -np.inf) for s in surfaces]
+
+    scale = np.array([100.0, 100.0, 1.0, 100.0, 1.0])  # EUR/t terms optimised in units of 100
+
+    free = np.asarray(free, bool)
+    base = np.asarray(theta0, float) / scale
+
+    def full(x):
+        y = base.copy()
+        y[free] = x
+        return y * scale
+
+    def neg(x):
+        theta = full(x)
+        tot = 0.0
+        for ll, zi in zip(lls, z, strict=True):
+            lp = _log_prior(c, r, zi, theta)
+            tot += logsumexp(ll + lp) - logsumexp(lp)  # prior normalised on the grid
+        return -tot
+
+    x0 = base[free]
+    simplex = np.vstack([x0, x0 + np.eye(len(x0))])  # first steps of 100 EUR/t, even from 0
+    res = minimize(
+        neg,
+        x0,
+        method="Nelder-Mead",
+        options={"maxiter": 4000, "xatol": 1e-4, "fatol": 1e-4, "initial_simplex": simplex},
+    )
+    theta = full(res.x)
+    post = []
+    for ll, zi in zip(lls, z, strict=True):
+        lw = ll + _log_prior(c, r, zi, theta)
+        w = np.exp(lw - lw.max())
+        w /= w.sum()
+        post.append(((w * c).sum(), (w * r).sum()))
+    return {
+        "theta": theta,
+        "loglik": -res.fun,
+        "posterior_cr": np.array(post),
+        "converged": res.success,
+    }
