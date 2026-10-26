@@ -61,6 +61,7 @@ CHUNK_DAYS = {
     "s2_plume": 366,  # one year per chunk: about 70 Level-2A scenes per plant
     "weather_plants": 1826,
     "landsat_st": 366,  # one year: about 45 scenes per plant (two satellites, 8-day revisit)
+    "viirs_nightfire": 31,  # one month: one global nightly file per night (S-NPP only)
     "s5p_no2": 366,  # one year: 52 weekly Earth Engine calls
     "gfw_presence": 366,  # one year: one report per berth zone
 }

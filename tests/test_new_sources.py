@@ -481,3 +481,72 @@ def test_gfw_presence_fetch_starts_on_the_first_of_the_month(monkeypatch):
     monkeypatch.setattr(src, "_report", lambda f, start, end: seen.append(start) or [])
     src.fetch(dt.date(2023, 1, 4), dt.date(2024, 1, 4))
     assert set(seen) == {dt.date(2023, 1, 1)}
+
+
+def test_vnf_night_parsing_and_near_plants():
+    import gzip
+
+    import pandas as pd
+
+    from nsqueeze.io.sources import nightfire
+
+    csv = (
+        "id,Lat_GMTCO,Lon_GMTCO,Date_Mscan,Temp_BB,unused\n"
+        "1,51.312,3.830,2026/10/01 00:41:35.597,1459,9\n"  # plant A, one overpass
+        "2,51.313,3.831,2026/10/01 00:41:35.900,999999,9\n"  # plant A, same overpass
+        "3,52.671,4.759,2026/10/01 01:10:00.000,999999,9\n"  # plant B, later overpass
+        "4,40.000,-3.000,2026/10/01 00:41:35.000,999999,9\n"  # far from every plant
+    )
+    det = nightfire.parse_night(gzip.compress(csv.encode()))
+    assert det.temp_k.iloc[0] == 1459.0 and det.temp_k.isna().sum() == 3
+
+    plants = pd.DataFrame({"plant_id": ["A", "B"], "lat": [51.310, 52.670], "lon": [3.830, 4.760]})
+    out = nightfire.near_plants(det, plants, "v30")
+    assert out.series_id.tolist() == ["VNF.A", "VNF.B"]  # one row per plant and overpass
+    assert (out.unit == "km").all() and (out.value < 1.0).all()
+    meta_a = json.loads(out.meta.iloc[0])
+    assert meta_a == {"n_5km": 2, "n_1km": 2, "max_temp_k": 1459.0, "product": "v30"}
+    meta_b = json.loads(out.meta.iloc[1])
+    assert meta_b["n_5km"] == 1 and meta_b["max_temp_k"] is None
+    assert out.observed_at.tolist() == [
+        pd.Timestamp("2026-10-01 00:41"),
+        pd.Timestamp("2026-10-01 01:10"),
+    ]
+
+
+def test_vnf_login_accepts_a_live_keycloak_session(monkeypatch):
+    import httpx
+    import pytest
+
+    from nsqueeze.io.sources.nightfire import NightfireVIIRS
+
+    monkeypatch.setenv("EOG_USER", "u")
+    monkeypatch.setenv("EOG_PASSWORD", "p")
+    no_form = httpx.MockTransport(lambda req: httpx.Response(200, text="<html>VNF</html>"))
+    src = NightfireVIIRS(httpx.Client(transport=no_form))
+    with pytest.raises(ValueError, match="no Keycloak login form"):
+        src._login()
+    src.client.cookies.set("KEYCLOAK_IDENTITY", "x")
+    src._login()  # second login of a back-fill: the session redirects past the form
+
+
+def test_vnf_night_urls_by_product_era():
+    import datetime as dt
+
+    from nsqueeze.io.sources.nightfire import NightfireVIIRS
+
+    src = NightfireVIIRS()
+    v21 = src._night_urls(dt.date(2017, 11, 30))
+    assert v21 == [
+        (
+            "https://eogdata.mines.edu/wwwdata/viirs_products/vnf/v21/VNF_npp_d20171130_noaa_v21.csv.gz",
+            "v21",
+        )
+    ]
+    v30 = src._night_urls(dt.date(2017, 12, 1))
+    assert v30[0][1] == "v30" and v30[0][0].endswith(
+        "/v30/rearrange/2017/12/npp/VNF_npp_d20171201_noaa_v30.csv.gz"
+    )
+    assert v30[1][1] == "v30-nrp" and v30[1][0].endswith(
+        "/v30_nrp/VNF_npp_d20171201_eog_nrp_v30.csv.gz"
+    )

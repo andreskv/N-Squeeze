@@ -112,6 +112,20 @@ firms_viirs:
   verified: true   # area API fetched and parsed 2026-10-23
   phase: 3
 
+viirs_nightfire:
+  name: VIIRS Nightfire (VNF) night-time detections near each ammonia plant, S-NPP (Earth Observation Group, Colorado School of Mines)
+  layer: plant_activity
+  portal: https://eogdata.mines.edu/products/vnf
+  frequency: daily (one global nightly file)
+  auth: EOG_USER + EOG_PASSWORD (Keycloak login)
+  terms: VIIRS Nightfire Data Use License (10 Jan 2025); the author holds a licence (OI-36); check before publishing derived results
+  recoverable: true
+  verified: true   # licence account checked and first night downloaded 2026-10-26
+  phase: 3
+  breaks:
+    - "VNF v2.1 until 2017-11, v3.0 from 2017-12 (near-real-time pass for the newest month); S-NPP only"
+  note: the raw archive keeps the plant rows only; the global nightly file is re-downloadable
+
 weather_plants:
   name: Open-Meteo historical API (ERA5), daily Tmax/Tmin at each plant in config/plants.csv
   layer: plant_activity

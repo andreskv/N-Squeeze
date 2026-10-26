@@ -22,6 +22,7 @@ from nsqueeze.io.sources.firms import FirmsVIIRS
 from nsqueeze.io.sources.gfw import GFWPresence
 from nsqueeze.io.sources.gie import AGSI, ALSI
 from nsqueeze.io.sources.landsat import LandsatThermal
+from nsqueeze.io.sources.nightfire import NightfireVIIRS
 from nsqueeze.io.sources.openmeteo import OpenMeteoPlantWeather, OpenMeteoWeather
 from nsqueeze.io.sources.portwatch import PortWatch
 from nsqueeze.io.sources.sentinel2 import Sentinel2Plume, Sentinel2SWIR
@@ -60,6 +61,7 @@ REGISTRY: dict[str, type[Source]] = {
         LandsatThermal,
         Sentinel2Plume,
         FirmsVIIRS,
+        NightfireVIIRS,
         Sentinel5PNO2,
         GFWPresence,
         OpenMeteoPlantWeather,
