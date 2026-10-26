@@ -25,13 +25,16 @@ import io
 import json
 import os
 import re
+import ssl
 import time
 from html import unescape
 
+import httpx
 import numpy as np
 import pandas as pd
+import truststore
 
-from nsqueeze.io.sources.base import MissingCredential, Source
+from nsqueeze.io.sources.base import USER_AGENT, MissingCredential, Source
 from nsqueeze.io.sources.sentinel2 import COLUMNS, plants_with_coordinates
 
 BASE = "https://eogdata.mines.edu/wwwdata/viirs_products/vnf"
@@ -106,6 +109,19 @@ def near_plants(det: pd.DataFrame, plants: pd.DataFrame, product: str) -> pd.Dat
 class NightfireVIIRS(Source):
     name = "viirs_nightfire"
     env_key = "EOG_USER"  # EOG_PASSWORD is also required
+
+    def __init__(self, client: httpx.Client | None = None) -> None:
+        # The EOG login host chains to a root that the certifi bundle dropped in 2026-10 and
+        # the operating system still trusts, so this client verifies against the system store.
+        super().__init__(
+            client
+            or httpx.Client(
+                timeout=60,
+                headers={"User-Agent": USER_AGENT},
+                follow_redirects=True,
+                verify=truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT),
+            )
+        )
 
     def _login(self) -> None:
         pw = os.environ.get("EOG_PASSWORD")
