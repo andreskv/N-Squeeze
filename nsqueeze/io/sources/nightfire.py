@@ -165,6 +165,9 @@ class NightfireVIIRS(Source):
             return [(f"{BASE}/v21/VNF_npp_d{ymd}_noaa_v21.csv.gz", "v21")]
         return [
             (f"{BASE}/v30/rearrange/{day:%Y}/{day:%m}/npp/VNF_npp_d{ymd}_noaa_v30.csv.gz", "v30"),
+            # The monthly folders miss some months (10 June to 31 December 2024 on 2026-10-27).
+            # The flat folder keeps the same reprocessed files.
+            (f"{BASE}/v30/VNF_npp_d{ymd}_noaa_v30.csv.gz", "v30"),
             (f"{BASE}/v30_nrp/VNF_npp_d{ymd}_eog_nrp_v30.csv.gz", "v30-nrp"),
         ]
 

@@ -547,6 +547,7 @@ def test_vnf_night_urls_by_product_era():
     assert v30[0][1] == "v30" and v30[0][0].endswith(
         "/v30/rearrange/2017/12/npp/VNF_npp_d20171201_noaa_v30.csv.gz"
     )
-    assert v30[1][1] == "v30-nrp" and v30[1][0].endswith(
+    assert v30[1][1] == "v30" and v30[1][0].endswith("/v30/VNF_npp_d20171201_noaa_v30.csv.gz")
+    assert v30[2][1] == "v30-nrp" and v30[2][0].endswith(
         "/v30_nrp/VNF_npp_d20171201_eog_nrp_v30.csv.gz"
     )
