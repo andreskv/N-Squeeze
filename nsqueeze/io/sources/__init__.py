@@ -6,6 +6,7 @@ from nsqueeze.io.sources.base import NotYetImplemented, Source
 from nsqueeze.io.sources.ecb import ECBFx, ECBFxNOK, ECBFxPLN
 from nsqueeze.io.sources.eex import EUAAuctions
 from nsqueeze.io.sources.eia import HenryHub
+from nsqueeze.io.sources.emodnet import EmodnetVesselDensity
 from nsqueeze.io.sources.entsoe import ENTSOEGasGeneration
 from nsqueeze.io.sources.entsog import ENTSOGFlows
 from nsqueeze.io.sources.ets import ETSVerifiedEmissions
@@ -66,6 +67,7 @@ REGISTRY: dict[str, type[Source]] = {
         NightfireVIIRS,
         Sentinel5PNO2,
         GFWPresence,
+        EmodnetVesselDensity,
         OpenMeteoPlantWeather,
         YahooTTF,
         YahooEquities,

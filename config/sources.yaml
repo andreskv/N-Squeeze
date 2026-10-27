@@ -177,6 +177,19 @@ gfw_presence:
   verified: true   # report checked 2026-10-25 at Sluiskil; non-commercial use only
   phase: 3
 
+emodnet_density:
+  name: EMODnet Human Activities vessel density in each coastal plant's berth zone (AIS, monthly, tankers and all ships)
+  layer: plant_activity
+  portal: https://emodnet.ec.europa.eu/en/human-activities
+  frequency: monthly maps, dataset refreshed about once a year
+  auth: none
+  licence: CC BY 4.0, data originator Cogea Srl, attribution required
+  history: 2017-01 to 2024-12, thinner from June 2024 (loss of satellite AIS data)
+  recoverable: true
+  verified: false   # endpoint and values checked 2026-10-27, terms not checked by hand
+  phase: 3
+  note: no map cells in 4 of the 9 berth zones (NL-SLUISK, IT-RAVENN, BG-DEVNYA, DE-BRUNSB), which give missing values
+
 s5p_no2:
   name: Sentinel-5P TROPOMI tropospheric NO2, weekly, disc and ring around each plant (Google Earth Engine)
   layer: plant_activity
