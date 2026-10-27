@@ -64,6 +64,7 @@ CHUNK_DAYS = {
     "viirs_nightfire": 31,  # one month: one global nightly file per night (S-NPP only)
     "s5p_no2": 366,  # one year: 52 weekly Earth Engine calls
     "gfw_presence": 366,  # one year: one report per berth zone
+    "emodnet_density": 366,  # one year: 12 monthly maps per berth zone and ship type
 }
 
 

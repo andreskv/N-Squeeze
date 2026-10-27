@@ -75,3 +75,15 @@ def test_fetch_one_row_per_zone_ship_type_and_month(monkeypatch):
     assert frame.value[frame.series_id.str.endswith("all")].isna().all()  # no data stays missing
     assert json.loads(frame.meta[0])["cells"] == 4
     assert len(calls) == 16  # four lattice cells in the zone x two ship types x two months
+
+
+def test_cell_value_retries_a_body_that_is_not_json(monkeypatch):
+    monkeypatch.setattr(emodnet.time, "sleep", lambda s: None)
+    bodies = iter(["<html>Service Unavailable</html>", SAMPLE.read_text()])
+    client = httpx.Client(
+        transport=httpx.MockTransport(lambda r: httpx.Response(200, text=next(bodies)))
+    )
+    value = emodnet.EmodnetVesselDensity(client=client)._cell_value(
+        "vesseldensity_10", 0.0, 0.0, emodnet.pd.Timestamp("2022-06-01")
+    )
+    assert value == 158.33782958984375

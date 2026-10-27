@@ -22,7 +22,9 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import time
 
+import httpx
 import numpy as np
 import pandas as pd
 
@@ -65,9 +67,18 @@ class EmodnetVesselDensity(Source):
             "info_format": "application/json",
             "time": f"{month:%Y-%m-%d}T00:00:00.000Z",
         }
-        r = self.client.get(URL, params=params)
-        r.raise_for_status()
-        return parse_value(r.text)
+        # A back-fill sends thousands of small requests, and the server sometimes answers one with
+        # an error status or a body that is not JSON. Retry that one request, not the whole chunk.
+        for wait in (10, 60, 300, None):
+            try:
+                r = self.client.get(URL, params=params)
+                r.raise_for_status()
+                return parse_value(r.text)
+            except (httpx.TransportError, httpx.HTTPStatusError, json.JSONDecodeError):
+                if wait is None:
+                    raise
+                time.sleep(wait)
+        raise AssertionError("unreachable")
 
     def fetch(self, start: dt.date, end: dt.date) -> pd.DataFrame:
         # Rows are monthly: a range that starts mid-month would split a month into two vintages.
