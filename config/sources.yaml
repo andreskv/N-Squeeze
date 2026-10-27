@@ -156,6 +156,17 @@ eurostat_c2015:
   verified: true   # API call checked 2026-10-24: DE, EL, ES, FR, IT, NL from 2019-01 to 2026-08
   phase: 3
 
+eurostat_prodcom:
+  name: Eurostat PRODCOM total production of ammonia by country (DS-059359 to 2024, DS-059368 from 2025), kg of nitrogen
+  layer: plant_activity
+  portal: https://ec.europa.eu/eurostat/databrowser/view/DS-059359/default/table
+  frequency: annual (revised; vintages kept)
+  auth: none
+  recoverable: false
+  verified: true   # API call checked 2026-10-27: EU27 + EU27_2020, 2015-2025, 377 rows
+  phase: 3
+  note: a confidential cell carries only the flag ":C" and is not archived (AT, BE, BG and NL anhydrous are confidential every year)
+
 gfw_presence:
   name: Global Fishing Watch AIS presence by vessel and month in each coastal plant's berth zone (4Wings report, public-global-presence)
   layer: plant_activity

@@ -49,6 +49,7 @@ $jobs = @(
   @{ Source = "eurostat_c2015"; At = "07:35"; Weekly = $true; Days = 800 },
   @{ Source = "ets_registry"; At = "07:45"; Weekly = $true; Days = 4400 },  # one file a year (April); vintages kept
   @{ Source = "gfw_presence"; At = "07:50"; Weekly = $true; Days = 100 },  # last three full months; GFW revises recent days
+  @{ Source = "eurostat_prodcom"; At = "07:55"; Weekly = $true; Days = 1096 },  # annual; 3 years back for revisions
   @{ Source = "fan_chart"; At = "2027-01-04 09:30"; Weekly = $true },  # first entry; after the 08:30 AGSI+ update
   # Live AIS stream: starts at log-on (or boot) and runs until the task is disabled. Unattended, it is
   # also started every hour; Task Scheduler ignores the start while the stream already runs
