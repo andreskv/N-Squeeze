@@ -36,6 +36,7 @@ $jobs = @(
   @{ Source = "ecb_fx";    At = "18:45" },
   @{ Source = "eua_auctions"; At = "18:50" },
   @{ Source = "viirs_nightfire"; At = "10:10" },  # 10 days: reprocessed nights replace the near-real-time ones
+  @{ Source = "grain_futures"; At = "23:45"; Days = 10 },
   @{ Source = "henry_hub"; At = "23:50" },
   @{ Source = "ttf_daily_candidate"; At = "23:55" },
   # Weekly (Monday): snapshots of revisable or slow-moving sources

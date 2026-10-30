@@ -248,6 +248,17 @@ equities_daily:
   verified: true   # every ticker fetched and parsed 2026-10-19
   phase: 0
 
+grain_futures:
+  name: Daily close of CBOT corn, soybean and wheat futures (continuous front month and the July, November and December contracts while they trade), Yahoo Finance
+  layer: market_tests
+  frequency: daily
+  auth: none
+  grade: C
+  recoverable: false   # Yahoo removes a contract when it expires, so the daily archive is the only free record
+  verified: true   # symbols and parsing checked live 2026-10-27
+  phase: 0
+  note: the Yahoo close may differ from the CME settlement price, so check the two on overlapping days before any splice with settlement data. Front-month history starts 2000-07-17.
+
 comext:
   name: Eurostat Comext imports by origin (CN 2814, 3102 10)
   layer: shipping_and_trade

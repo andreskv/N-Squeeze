@@ -1,0 +1,61 @@
+{
+  "chart": {
+    "result": [
+      {
+        "meta": {
+          "symbol": "ZCZ27.CBT",
+          "currency": "USX",
+          "exchangeName": "CBT",
+          "gmtoffset": -14400,
+          "instrumentType": "FUTURE"
+        },
+        "timestamp": [
+          1792036800,
+          1792123200,
+          1792382400
+        ],
+        "indicators": {
+          "quote": [
+            {
+              "close": [
+                509.25,
+                506.75,
+                504.25
+              ],
+              "low": [
+                509.0,
+                504.5,
+                502.75
+              ],
+              "volume": [
+                14200,
+                12010,
+                15887
+              ],
+              "high": [
+                512.75,
+                510.5,
+                507.25
+              ],
+              "open": [
+                511.5,
+                509.25,
+                505.5
+              ]
+            }
+          ],
+          "adjclose": [
+            {
+              "adjclose": [
+                509.25,
+                506.75,
+                504.25
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "error": null
+  }
+}

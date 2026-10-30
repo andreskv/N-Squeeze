@@ -22,6 +22,7 @@ from nsqueeze.io.sources.eurostat import (
 from nsqueeze.io.sources.firms import FirmsVIIRS
 from nsqueeze.io.sources.gfw import GFWPresence
 from nsqueeze.io.sources.gie import AGSI, ALSI
+from nsqueeze.io.sources.grains import GrainFutures
 from nsqueeze.io.sources.landsat import LandsatThermal
 from nsqueeze.io.sources.nightfire import NightfireVIIRS
 from nsqueeze.io.sources.openmeteo import OpenMeteoPlantWeather, OpenMeteoWeather
@@ -71,6 +72,7 @@ REGISTRY: dict[str, type[Source]] = {
         OpenMeteoPlantWeather,
         YahooTTF,
         YahooEquities,
+        GrainFutures,
         _stub("wto_hormuz", 0),
         ETSVerifiedEmissions,
     )
