@@ -33,8 +33,13 @@ class Source(ABC):
     verified: ClassVar[bool] = False  # flip once a human has checked endpoint + terms
 
     def __init__(self, client: httpx.Client | None = None) -> None:
+        # retries=3 re-tries a failed connection (a timeout while connecting), so one network
+        # blip does not fail a daily run.
         self.client = client or httpx.Client(
-            timeout=60, headers={"User-Agent": USER_AGENT}, follow_redirects=True
+            timeout=60,
+            headers={"User-Agent": USER_AGENT},
+            follow_redirects=True,
+            transport=httpx.HTTPTransport(retries=3),
         )
 
     @property
