@@ -56,3 +56,13 @@ amendments:
   - file: PREREGISTRATION-amendment-16.md
     sha256: 618b63117ff952f6f3b039234a9aada109210d3d438d2c5f03819f54bfa131fc
     frozen_at: 2026-10-24
+  - file: PREREGISTRATION-amendment-20.md
+    sha256: b7ed7bb968ffd5f6bc8dd4a6da42d532069fd08a35999b5e6e9ad01ff772df92
+    frozen_at: 2026-11-14
+
+# Series that no analysis reads before its one confirmatory run. "*" seals the whole source.
+sealed_series:
+  entsog:
+    - ENTSOG.HU-TSO-0001.FNC-00200.exit
+    - ENTSOG.HU-TSO-0001.DIS-00196.exit
+  eurostat_prodcom: ["*"]
