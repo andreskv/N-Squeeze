@@ -71,6 +71,15 @@ def require_frozen(state: FreezeState | None = None) -> FreezeState:
     return s
 
 
+def sealed_series(source: str) -> list[str]:
+    """Series of ``source`` that stay unread until their one confirmatory run.
+
+    Each entry is a series ID. The entry ``*`` seals the whole source.
+    """
+    raw = yaml.safe_load((config_dir() / "freeze.yaml").read_text(encoding="utf-8"))
+    return list((raw.get("sealed_series") or {}).get(source, ()))
+
+
 def preregistration_sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 

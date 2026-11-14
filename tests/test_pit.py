@@ -67,3 +67,23 @@ def test_duplicate_keys_reports_rows_that_repeat_a_key_in_one_retrieval(tmp_path
     assert dups.iloc[0].series_id == "AGSI.EU.full"
     assert int(dups.iloc[0].n_rows) == 2
     assert store.duplicate_keys("agsi", as_of=dt.datetime(2026, 10, 2, tzinfo=dt.UTC)).empty
+
+
+def test_sealed_series_stay_out_of_a_read(tmp_path, monkeypatch):
+    from nsqueeze.freeze import HoldoutLocked
+
+    store = PITStore(tmp_path)
+    open_, shut = _frame(80.0), _frame(1.0).assign(series_id="AGSI.HU.full")
+    store.write(
+        "agsi", pd.concat([open_, shut]), retrieved_at=dt.datetime(2026, 10, 3, tzinfo=dt.UTC)
+    )
+    monkeypatch.setattr("nsqueeze.io.pit.sealed_series", lambda source: ["AGSI.HU.full"])
+
+    assert set(store.read("agsi").series_id) == {"AGSI.EU.full"}
+    with pytest.raises(HoldoutLocked, match="sealed"):
+        store.read("agsi", series=["AGSI.HU.full"])
+    assert len(store.read("agsi", unseal=True)) == 4
+
+    monkeypatch.setattr("nsqueeze.io.pit.sealed_series", lambda source: ["*"])
+    with pytest.raises(HoldoutLocked, match="sealed"):
+        store.read("agsi")

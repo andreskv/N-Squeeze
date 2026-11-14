@@ -30,6 +30,7 @@ import duckdb
 import pandas as pd
 
 from nsqueeze.config import data_dir
+from nsqueeze.freeze import HoldoutLocked, sealed_series
 
 REQUIRED = ("series_id", "observed_at", "value", "unit")
 
@@ -81,8 +82,20 @@ class PITStore:
         *,
         as_of: dt.datetime | str | None = None,
         series: list[str] | None = None,
+        unseal: bool = False,
     ) -> pd.DataFrame:
-        """Latest vintage per (series_id, observed_at) known at ``as_of`` (UTC; default: now)."""
+        """Latest vintage per (series_id, observed_at) known at ``as_of`` (UTC; default: now).
+
+        Sealed series do not come back. A read that names one, or that reads a fully
+        sealed source, raises. Only a confirmatory run passes ``unseal=True``.
+        """
+        sealed = [] if unseal else sealed_series(source)
+        named = sorted(set(series or ()) & set(sealed))
+        if "*" in sealed or named:
+            raise HoldoutLocked(
+                f"{source}: {', '.join(named) or 'the source'} is sealed. "
+                "Read it only in its confirmatory run, with unseal=True."
+            )
         cutoff = pd.Timestamp(as_of or dt.datetime.now(dt.UTC))
         if cutoff.tzinfo is not None:
             cutoff = cutoff.tz_convert("UTC").tz_localize(None)
@@ -90,6 +103,9 @@ class PITStore:
         if series:
             where.append(f"series_id IN ({', '.join('?' * len(series))})")
             args.extend(series)
+        if sealed:
+            where.append(f"series_id NOT IN ({', '.join('?' * len(sealed))})")
+            args.extend(sealed)
         sql = f"""
             SELECT series_id, observed_at, value, unit, meta, retrieved_at
             FROM read_parquet('{self._glob(source)}', hive_partitioning = true,
