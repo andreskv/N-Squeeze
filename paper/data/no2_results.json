@@ -1,0 +1,42 @@
+{
+ "calibration": {
+  "auc": 0.6600122135034782,
+  "off": 287,
+  "running": 3412
+ },
+ "test": {
+  "auc": 0.5120850233731014,
+  "off": 223,
+  "running": 754
+ },
+ "calibration (for reference)": {
+  "auc": 0.7552921086520096,
+  "off": 302,
+  "running": 3533
+ },
+ "TEST": {
+  "auc": 0.5100096912640177,
+  "off": 233,
+  "running": 775
+ },
+ "site FR-GRANDP": 0.31511035653650254,
+ "site RO-SLOBOZ": 0.617616298811545,
+ "site RO-TARGUM": 0.7028657164291072,
+ "calibration months": {
+  "auc": 0.750106693221424,
+  "off": 68,
+  "running": 827
+ },
+ "test months": {
+  "auc": 0.564957264957265,
+  "off": 52,
+  "running": 180
+ },
+ "ets": {
+  "rho": 0.09687702923214156,
+  "p": 0.11628837116288371,
+  "plant_years": 187,
+  "plants": 27
+ },
+ "as_of": "2026-10-24T10:15"
+}
