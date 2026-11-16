@@ -281,6 +281,17 @@ lseg_portcalls:
   phase: 0
   note: raw values stay in data/ (the licence allows analysis, not redistribution). The ingest drops every field and call dated 2026 or later, and keeps one row of each call that several exports repeat. Berth-level stays start in 2023.
 
+lseg_series:
+  name: Daily futures, assessments, freight indices, implied volatility and equities (CBOT urea, UAN, DAP and grains; SGX ammonia FOB Middle East; European gas hubs; EUA; Baltic LPG freight), LSEG Workspace CodeBook export
+  layer: market_tests
+  frequency: one-off (hand export in a licensed session)
+  auth: licensed terminal, no API
+  grade: B
+  recoverable: true
+  verified: true   # files checked 2026-11-16
+  phase: 0
+  note: raw values stay in data/ (the licence allows analysis, not redistribution). The ingest keeps observations up to 31 Dec 2025 only. Each unit comes from the exchange documents or from a day-by-day match with an archived source. Spreads, freight and Euronext series stay "unverified".
+
 comext:
   name: Eurostat Comext imports by origin (CN 2814, 3102 10)
   layer: shipping_and_trade

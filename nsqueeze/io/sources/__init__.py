@@ -26,6 +26,7 @@ from nsqueeze.io.sources.grains import GrainFutures
 from nsqueeze.io.sources.landsat import LandsatThermal
 from nsqueeze.io.sources.lseg import LSEGVessels
 from nsqueeze.io.sources.lseg_ports import LSEGPortCalls
+from nsqueeze.io.sources.lseg_series import LSEGSeries
 from nsqueeze.io.sources.nightfire import NightfireVIIRS
 from nsqueeze.io.sources.openmeteo import OpenMeteoPlantWeather, OpenMeteoWeather
 from nsqueeze.io.sources.portwatch import PortWatch
@@ -77,6 +78,7 @@ REGISTRY: dict[str, type[Source]] = {
         GrainFutures,
         LSEGVessels,
         LSEGPortCalls,
+        LSEGSeries,
         _stub("wto_hormuz", 0),
         ETSVerifiedEmissions,
     )
