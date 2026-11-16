@@ -80,6 +80,19 @@ def sealed_series(source: str) -> list[str]:
     return list((raw.get("sealed_series") or {}).get(source, ()))
 
 
+def sealed_ranges(source: str) -> list[tuple[str, pd.Timestamp, pd.Timestamp]]:
+    """Date ranges of ``source`` that stay unread until their one confirmatory run.
+
+    Each entry is (regular expression on the series ID, first date, last date). A read
+    leaves out every row whose series ID matches and whose date is in the range.
+    """
+    raw = yaml.safe_load((config_dir() / "freeze.yaml").read_text(encoding="utf-8"))
+    return [
+        (r["series"], pd.Timestamp(r["from"]), pd.Timestamp(r["to"]))
+        for r in (raw.get("sealed_ranges") or {}).get(source, ())
+    ]
+
+
 def preregistration_sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 

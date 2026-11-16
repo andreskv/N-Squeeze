@@ -30,7 +30,7 @@ import duckdb
 import pandas as pd
 
 from nsqueeze.config import data_dir
-from nsqueeze.freeze import HoldoutLocked, sealed_series
+from nsqueeze.freeze import HoldoutLocked, sealed_ranges, sealed_series
 
 REQUIRED = ("series_id", "observed_at", "value", "unit")
 
@@ -87,7 +87,8 @@ class PITStore:
         """Latest vintage per (series_id, observed_at) known at ``as_of`` (UTC; default: now).
 
         Sealed series do not come back. A read that names one, or that reads a fully
-        sealed source, raises. Only a confirmatory run passes ``unseal=True``.
+        sealed source, raises. Rows in a sealed date range do not come back either.
+        Only a confirmatory run passes ``unseal=True``.
         """
         sealed = [] if unseal else sealed_series(source)
         named = sorted(set(series or ()) & set(sealed))
@@ -106,6 +107,13 @@ class PITStore:
         if sealed:
             where.append(f"series_id NOT IN ({', '.join('?' * len(sealed))})")
             args.extend(sealed)
+        for pattern, first, last in [] if unseal else sealed_ranges(source):
+            where.append(
+                "NOT (regexp_matches(series_id, ?) AND observed_at >= ? AND observed_at < ?)"
+            )
+            args.extend(
+                [pattern, first.to_pydatetime(), (last + pd.Timedelta(days=1)).to_pydatetime()]
+            )
         sql = f"""
             SELECT series_id, observed_at, value, unit, meta, retrieved_at
             FROM read_parquet('{self._glob(source)}', hive_partitioning = true,

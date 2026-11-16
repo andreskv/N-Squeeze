@@ -87,3 +87,27 @@ def test_sealed_series_stay_out_of_a_read(tmp_path, monkeypatch):
     monkeypatch.setattr("nsqueeze.io.pit.sealed_series", lambda source: ["*"])
     with pytest.raises(HoldoutLocked, match="sealed"):
         store.read("agsi")
+
+
+def test_sealed_ranges_drop_matching_rows_inside_the_dates_only(tmp_path, monkeypatch):
+    store = PITStore(tmp_path)
+    days = pd.to_datetime(
+        ["2022-12-31 00:00", "2023-01-01 00:00", "2025-12-31 23:00", "2026-01-01 00:00"]
+    )
+    frame = pd.DataFrame(
+        {
+            "series_id": ["IMO1.dep.sluiskil"] * 4 + ["IMO1.stay.berth"] * 4,
+            "observed_at": list(days) * 2,
+            "value": 1.0,
+            "unit": "m",
+        }
+    )
+    store.write("ports", frame, retrieved_at=dt.datetime(2026, 11, 16, tzinfo=dt.UTC))
+    seal = [(r"\.(dep|arr)\.", pd.Timestamp("2023-01-01"), pd.Timestamp("2025-12-31"))]
+    monkeypatch.setattr("nsqueeze.io.pit.sealed_ranges", lambda source: seal)
+
+    got = store.read("ports")
+    dep = got[got.series_id == "IMO1.dep.sluiskil"].observed_at
+    assert list(dep) == [days[0], days[3]]  # both edge days of the range are sealed
+    assert (got.series_id == "IMO1.stay.berth").sum() == 4  # other series stay open
+    assert len(store.read("ports", unseal=True)) == 8
