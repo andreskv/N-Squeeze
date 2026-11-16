@@ -270,6 +270,17 @@ lseg_vessels:
   phase: 0
   note: raw values stay in data/ (the licence allows analysis, not redistribution). Attributes are as of the session date.
 
+lseg_portcalls:
+  name: LPG tanker port departures, arrivals and berth stays (draft or stay hours), 2019-2025, LSEG Workspace Port Search export
+  layer: shipping_and_trade
+  frequency: one-off (hand export in a licensed session)
+  auth: licensed terminal, no API
+  grade: B
+  recoverable: true
+  verified: true   # files checked 2026-11-16
+  phase: 0
+  note: raw values stay in data/ (the licence allows analysis, not redistribution). The ingest drops every field and call dated 2026 or later, and keeps one row of each call that several exports repeat. Berth-level stays start in 2023.
+
 comext:
   name: Eurostat Comext imports by origin (CN 2814, 3102 10)
   layer: shipping_and_trade
