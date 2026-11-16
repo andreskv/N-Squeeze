@@ -259,6 +259,17 @@ grain_futures:
   phase: 0
   note: the Yahoo close may differ from the CME settlement price, so check the two on overlapping days before any splice with settlement data. Front-month history starts 2000-07-17.
 
+lseg_vessels:
+  name: Ship registry (type, size class, cargo volume, deadweight, build date, owner) for the tankers seen at the plant berths, LSEG Workspace export
+  layer: shipping_and_trade
+  frequency: one-off (hand export in a licensed session)
+  auth: licensed terminal, no API
+  grade: B
+  recoverable: true
+  verified: true   # files checked 2026-11-16
+  phase: 0
+  note: raw values stay in data/ (the licence allows analysis, not redistribution). Attributes are as of the session date.
+
 comext:
   name: Eurostat Comext imports by origin (CN 2814, 3102 10)
   layer: shipping_and_trade
