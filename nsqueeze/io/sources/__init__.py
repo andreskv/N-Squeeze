@@ -25,6 +25,7 @@ from nsqueeze.io.sources.firms import FirmsVIIRS
 from nsqueeze.io.sources.gfw import GFWPresence
 from nsqueeze.io.sources.gie import AGSI, ALSI
 from nsqueeze.io.sources.grains import GrainFutures
+from nsqueeze.io.sources.gus import GUSProduction
 from nsqueeze.io.sources.landsat import LandsatThermal
 from nsqueeze.io.sources.lseg import LSEGVessels
 from nsqueeze.io.sources.lseg_ports import LSEGPortCalls
@@ -86,6 +87,7 @@ REGISTRY: dict[str, type[Source]] = {
         NewswebFilings,
         OCINews,
         BASFNews,
+        GUSProduction,
         _stub("wto_hormuz", 0),
         ETSVerifiedEmissions,
     )

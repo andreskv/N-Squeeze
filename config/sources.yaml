@@ -328,6 +328,18 @@ basf_news:
   phase: 0
   note: One row per release, dated by the local publication day. Raw pages kept only for production titles. A published data set gives dates, titles and links.
 
+gus_production:
+  name: Statistics Poland (GUS) monthly production of anhydrous ammonia, Table 2 of each monthly edition
+  layer: plant_activity
+  portal: https://stat.gov.pl/obszary-tematyczne/przemysl-budownictwo-srodki-trwale/przemysl/
+  frequency: monthly
+  auth: none
+  grade: A
+  recoverable: true
+  verified: true   # edition pages and workbooks 2016-2025 checked live 2026-11-18
+  phase: 0
+  note: Thousand tonnes of 100 % NH3 per month, Poland. Each edition revises the months of the current and the previous year. One row per month from the latest edition read; meta names the edition.
+
 comext:
   name: Eurostat Comext imports by origin (CN 2814, 3102 10)
   layer: shipping_and_trade
