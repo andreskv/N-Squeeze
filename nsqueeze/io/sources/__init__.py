@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from nsqueeze.io.sources.base import NotYetImplemented, Source
+from nsqueeze.io.sources.company_news import BASFNews, OCINews
 from nsqueeze.io.sources.ecb import ECBFx, ECBFxNOK, ECBFxPLN
 from nsqueeze.io.sources.eex import EUAAuctions
 from nsqueeze.io.sources.eia import HenryHub
@@ -83,6 +84,8 @@ REGISTRY: dict[str, type[Source]] = {
         LSEGPortCalls,
         LSEGSeries,
         NewswebFilings,
+        OCINews,
+        BASFNews,
         _stub("wto_hormuz", 0),
         ETSVerifiedEmissions,
     )

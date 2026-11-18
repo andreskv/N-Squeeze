@@ -304,6 +304,30 @@ newsweb_filings:
   phase: 0
   note: issuer Yara (YAR). One row per filing. Texts kept for analysis only. A published data set gives dates, titles and links.
 
+oci_news:
+  name: Press releases of OCI from its own web site, with the text of releases about production
+  layer: plant_activity
+  portal: https://oci-global.com/news-stories/press-releases/
+  frequency: daily
+  auth: none
+  grade: A
+  recoverable: true
+  verified: true   # WordPress API checked live 2026-11-18
+  phase: 0
+  note: One row per release, dated by the local publication day. Texts kept for analysis only. A published data set gives dates, titles and links.
+
+basf_news:
+  name: News releases of BASF from its own web site
+  layer: plant_activity
+  portal: https://www.basf.com/global/en/media/news-releases
+  frequency: daily
+  auth: none
+  grade: A
+  recoverable: true
+  verified: true   # site map and content API checked live 2026-11-18
+  phase: 0
+  note: One row per release, dated by the local publication day. Raw pages kept only for production titles. A published data set gives dates, titles and links.
+
 comext:
   name: Eurostat Comext imports by origin (CN 2814, 3102 10)
   layer: shipping_and_trade
