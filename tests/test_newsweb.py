@@ -62,3 +62,32 @@ def test_fetch_gets_bodies_for_production_titles_only(tmp_path, monkeypatch):
     df = src.fetch(dt.date(2022, 1, 1), dt.date(2022, 12, 31))
     assert asked == [1]
     assert len(df) == 2
+
+
+def test_results_release_keeps_the_report_pdf_not_the_slides(tmp_path, monkeypatch):
+    monkeypatch.setenv("NSQ_DATA_DIR", str(tmp_path))
+    monkeypatch.setattr(newsweb.time, "sleep", lambda s: None)
+    msg = {**MSGS[0], "messageId": 7, "title": "Yara reports improved earnings"}
+    pulled = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        path = request.url.path
+        if path.endswith("/list"):
+            return httpx.Response(200, json={"data": {"messages": [msg]}})
+        if path.endswith("/attachment"):
+            pulled.append(int(request.url.params["attachmentId"]))
+            return httpx.Response(200, content=b"%PDF-1.7 test")
+        files = [
+            {"id": 1, "name": "Yara 3Q Report.pdf"},
+            {"id": 2, "name": "Yara 3Q Presentation.pdf"},
+        ]
+        return httpx.Response(200, json={"data": {"message": {"body": "b", "attachments": files}}})
+
+    src = NewswebFilings(client=httpx.Client(transport=httpx.MockTransport(handler)))
+    df = src.fetch(dt.date(2024, 1, 1), dt.date(2024, 12, 31))
+    assert pulled == [1]
+    assert [a["name"] for a in json.loads(df.meta[0])["attachments"]] == [
+        "Yara 3Q Report.pdf",
+        "Yara 3Q Presentation.pdf",
+    ]
+    assert list((tmp_path / "raw" / "newsweb_filings").rglob("*.pdf.gz"))

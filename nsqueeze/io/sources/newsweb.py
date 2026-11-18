@@ -7,7 +7,8 @@ by date range and returns each filing's text.
 
 value = 1 per filing. ``meta`` holds the title, the category and the link. For a filing whose
 title names production (curtailment, ammonia, shutdown, restart and similar terms), ``meta``
-also holds the body text, for the later extraction of dated plant events. The texts are kept
+also holds the body text and the list of attachments. For a results release, the report PDF
+goes to the raw archive: it holds plant decisions and production volumes. The texts are kept
 for analysis. A published data set gives only dates, titles and links.
 """
 
@@ -26,13 +27,22 @@ API = "https://api3.oslo.oslobors.no/v1/newsreader"
 ISSUERS = ("YAR",)  # Yara International. Other Oslo issuers make no ammonia in the EU
 PRODUCTION = re.compile(
     r"curtail|ammonia|production|produksjon|shut ?down|restart|\bclos(e|es|ing|ure)\b"
-    r"|\bplants?\b|gas price|outage",
+    r"|\bplants?\b|gas price|outage"
+    # Results releases carry plant decisions (closures) and production volumes.
+    r"|\bresults\b|\bquarter|\breports?\b|kvartal",
     re.I,
 )
 COLUMNS = ["series_id", "observed_at", "value", "unit", "meta"]
 
 
-def to_canonical(messages: list[dict], bodies: dict[int, str]) -> pd.DataFrame:
+RESULTS = re.compile(r"\bresults\b|\bquarter|annual report|kvartal|\bearnings\b", re.I)
+REPORT_FILE = re.compile(r"report", re.I)  # the quarterly or annual report, not the slides
+
+
+def to_canonical(
+    messages: list[dict], bodies: dict[int, str], attachments: dict[int, list] | None = None
+) -> pd.DataFrame:
+    attachments = attachments or {}
     rows = []
     for m in messages:
         mid = int(m["messageId"])
@@ -44,6 +54,8 @@ def to_canonical(messages: list[dict], bodies: dict[int, str]) -> pd.DataFrame:
         }
         if mid in bodies:
             meta["body"] = bodies[mid]
+        if attachments.get(mid):
+            meta["attachments"] = attachments[mid]
         rows.append(
             {
                 "series_id": f"NEWSWEB.{m.get('issuerSign')}.{mid}",
@@ -71,7 +83,7 @@ class NewswebFilings(Source):
     verified = True  # list and message endpoints checked live on 2026-11-18 (Yara, 2021-2022)
 
     def fetch(self, start: dt.date, end: dt.date) -> pd.DataFrame:
-        messages, bodies = [], {}
+        messages, bodies, files = [], {}, {}
         for issuer in ISSUERS:
             for a, b in year_windows(start, end):
                 r = self.client.get(
@@ -87,6 +99,23 @@ class NewswebFilings(Source):
                 r = self.client.get(f"{API}/message", params={"messageId": m["messageId"]})
                 r.raise_for_status()
                 self.keep_raw(r.content, "json")
-                bodies[int(m["messageId"])] = r.json()["data"]["message"].get("body", "")
+                msg = r.json()["data"]["message"]
+                mid = int(m["messageId"])
+                bodies[mid] = msg.get("body", "")
+                files[mid] = [
+                    {"id": a["id"], "name": a["name"]} for a in msg.get("attachments") or []
+                ]
                 time.sleep(0.5)
-        return to_canonical(messages, bodies)
+                # Results releases: keep the report PDF. It holds the plant decisions and the
+                # production volumes that the short release text leaves out.
+                if RESULTS.search(m["title"]):
+                    for a in files[mid]:
+                        if REPORT_FILE.search(a["name"]) and a["name"].lower().endswith(".pdf"):
+                            f = self.client.get(
+                                f"{API}/attachment",
+                                params={"messageId": mid, "attachmentId": a["id"]},
+                            )
+                            f.raise_for_status()
+                            self.keep_raw(f.content, "pdf")
+                            time.sleep(0.5)
+        return to_canonical(messages, bodies, files)
