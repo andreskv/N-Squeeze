@@ -292,6 +292,18 @@ lseg_series:
   phase: 0
   note: raw values stay in data/ (the licence allows analysis, not redistribution). The ingest keeps observations up to 31 Dec 2025 only. Each unit comes from the exchange documents or from a day-by-day match with an archived source. Spreads, freight and Euronext series stay "unverified".
 
+newsweb_filings:
+  name: Stock-exchange filings and press releases of listed producers on Oslo Børs (Newsweb), with the text of filings about production
+  layer: plant_activity
+  portal: https://newsweb.oslobors.no
+  frequency: daily
+  auth: none
+  grade: A
+  recoverable: true
+  verified: true   # list and message endpoints checked live 2026-11-18
+  phase: 0
+  note: issuer Yara (YAR). One row per filing. Texts kept for analysis only. A published data set gives dates, titles and links.
+
 comext:
   name: Eurostat Comext imports by origin (CN 2814, 3102 10)
   layer: shipping_and_trade
