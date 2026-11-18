@@ -47,27 +47,25 @@ def test_year_windows_cover_the_range_once():
     ]
 
 
-def test_fetch_gets_bodies_for_production_titles_only(tmp_path, monkeypatch):
+def test_fetch_keeps_bodies_for_production_titles_only(tmp_path, monkeypatch):
     monkeypatch.setenv("NSQ_DATA_DIR", str(tmp_path))
     monkeypatch.setattr(newsweb.time, "sleep", lambda s: None)
-    asked = []
 
     def handler(request: httpx.Request) -> httpx.Response:
         if request.url.path.endswith("/list"):
             return httpx.Response(200, json={"data": {"messages": MSGS}})
-        asked.append(int(request.url.params["messageId"]))
         return httpx.Response(200, json={"data": {"message": {"body": "text"}}})
 
     src = NewswebFilings(client=httpx.Client(transport=httpx.MockTransport(handler)))
     df = src.fetch(dt.date(2022, 1, 1), dt.date(2022, 12, 31))
-    assert asked == [1]
-    assert len(df) == 2
+    m0, m1 = (json.loads(m) for m in df.meta)
+    assert m0["body"] == "text" and "body" not in m1
 
 
-def test_results_release_keeps_the_report_pdf_not_the_slides(tmp_path, monkeypatch):
+def test_report_pdf_kept_not_the_slides_whatever_the_title(tmp_path, monkeypatch):
     monkeypatch.setenv("NSQ_DATA_DIR", str(tmp_path))
     monkeypatch.setattr(newsweb.time, "sleep", lambda s: None)
-    msg = {**MSGS[0], "messageId": 7, "title": "Yara reports improved earnings"}
+    msg = {**MSGS[0], "messageId": 7, "title": "Yara delivers improved returns"}
     pulled = []
 
     def handler(request: httpx.Request) -> httpx.Response:

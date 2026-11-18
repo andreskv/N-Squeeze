@@ -7,9 +7,10 @@ by date range and returns each filing's text.
 
 value = 1 per filing. ``meta`` holds the title, the category and the link. For a filing whose
 title names production (curtailment, ammonia, shutdown, restart and similar terms), ``meta``
-also holds the body text and the list of attachments. For a results release, the report PDF
-goes to the raw archive: it holds plant decisions and production volumes. The texts are kept
-for analysis. A published data set gives only dates, titles and links.
+also holds the body text. Every filing is opened, so that ``meta`` lists its attachments, and
+each report PDF (quarterly, annual or integrated report) goes to the raw archive: the reports
+hold plant decisions and production volumes. Release titles vary too much to select them by
+title. The texts are kept for analysis. A published data set gives only dates, titles and links.
 """
 
 from __future__ import annotations
@@ -27,15 +28,12 @@ API = "https://api3.oslo.oslobors.no/v1/newsreader"
 ISSUERS = ("YAR",)  # Yara International. Other Oslo issuers make no ammonia in the EU
 PRODUCTION = re.compile(
     r"curtail|ammonia|production|produksjon|shut ?down|restart|\bclos(e|es|ing|ure)\b"
-    r"|\bplants?\b|gas price|outage"
-    # Results releases carry plant decisions (closures) and production volumes.
-    r"|\bresults\b|\bquarter|\breports?\b|kvartal",
+    r"|\bplants?\b|gas price|outage",
     re.I,
 )
 COLUMNS = ["series_id", "observed_at", "value", "unit", "meta"]
 
 
-RESULTS = re.compile(r"\bresults\b|\bquarter|annual report|kvartal|\bearnings\b", re.I)
 REPORT_FILE = re.compile(r"report", re.I)  # the quarterly or annual report, not the slides
 
 
@@ -95,27 +93,21 @@ class NewswebFilings(Source):
                 messages += r.json()["data"]["messages"]
                 time.sleep(0.5)
         for m in messages:
+            mid = int(m["messageId"])
+            r = self.client.get(f"{API}/message", params={"messageId": mid})
+            r.raise_for_status()
+            self.keep_raw(r.content, "json")
+            msg = r.json()["data"]["message"]
             if PRODUCTION.search(m["title"]):
-                r = self.client.get(f"{API}/message", params={"messageId": m["messageId"]})
-                r.raise_for_status()
-                self.keep_raw(r.content, "json")
-                msg = r.json()["data"]["message"]
-                mid = int(m["messageId"])
                 bodies[mid] = msg.get("body", "")
-                files[mid] = [
-                    {"id": a["id"], "name": a["name"]} for a in msg.get("attachments") or []
-                ]
-                time.sleep(0.5)
-                # Results releases: keep the report PDF. It holds the plant decisions and the
-                # production volumes that the short release text leaves out.
-                if RESULTS.search(m["title"]):
-                    for a in files[mid]:
-                        if REPORT_FILE.search(a["name"]) and a["name"].lower().endswith(".pdf"):
-                            f = self.client.get(
-                                f"{API}/attachment",
-                                params={"messageId": mid, "attachmentId": a["id"]},
-                            )
-                            f.raise_for_status()
-                            self.keep_raw(f.content, "pdf")
-                            time.sleep(0.5)
+            files[mid] = [{"id": a["id"], "name": a["name"]} for a in msg.get("attachments") or []]
+            time.sleep(0.5)
+            for a in files[mid]:
+                if REPORT_FILE.search(a["name"]) and a["name"].lower().endswith(".pdf"):
+                    f = self.client.get(
+                        f"{API}/attachment", params={"messageId": mid, "attachmentId": a["id"]}
+                    )
+                    f.raise_for_status()
+                    self.keep_raw(f.content, "pdf")
+                    time.sleep(0.5)
         return to_canonical(messages, bodies, files)
