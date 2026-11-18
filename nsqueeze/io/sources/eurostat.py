@@ -127,6 +127,63 @@ class Comext(Source):
         )
 
 
+class ComextReporter(Source):
+    """Imports and exports of each EU-27 member state by partner, same products as ``comext``.
+
+    The EU-27 series of ``comext`` shows what Europe buys. This one shows which member state
+    buys or sells it, which a plant-level study needs: a country whose plants stop should import
+    more. One request per reporter. Comext writes Greece as GR, Eurostat's other tables as EL.
+    """
+
+    name = "comext_reporter"
+    verified = True  # reporter and flow parameters checked live on 2026-11-18 (NL, 2814)
+    FLOWS: ClassVar[dict[str, str]] = {"1": "IMP", "2": "EXP"}
+
+    def fetch(self, start: dt.date, end: dt.date) -> pd.DataFrame:
+        frames = []
+        for geo in EU27_GEO:
+            reporter = "GR" if geo == "EL" else geo
+            r = self.client.get(
+                COMEXT_URL,
+                params={
+                    "reporter": reporter,
+                    "product": list(COMEXT_PRODUCTS),
+                    "flow": list(self.FLOWS),
+                    "indicators": list(COMEXT_INDICATORS),
+                    "freq": "M",
+                    "sinceTimePeriod": f"{start:%Y-%m}",
+                },
+            )
+            r.raise_for_status()
+            self.keep_raw(r.content, "json")
+            frames.append(reporter_canonical(r.json(), end))
+        return pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
+
+
+def reporter_canonical(body: dict, end: dt.date) -> pd.DataFrame:
+    df = parse_jsonstat(body)
+    df = df[df.time.map(_month_start) <= pd.Timestamp(end)]
+    meta = json.dumps({"updated": body.get("updated")})
+    return pd.DataFrame(
+        {
+            "series_id": "COMEXT."
+            + df["reporter"]
+            + "."
+            + df["flow"].map(ComextReporter.FLOWS)
+            + "."
+            + df["product"]
+            + "."
+            + df["partner"]
+            + "."
+            + df["indicators"],
+            "observed_at": df.time.map(_month_start),
+            "value": df.value,
+            "unit": df.indicators.map(COMEXT_INDICATORS),
+            "meta": meta,
+        }
+    )
+
+
 class _EurostatStats(Source):
     dataset: str
     fixed: ClassVar[dict[str, str]]

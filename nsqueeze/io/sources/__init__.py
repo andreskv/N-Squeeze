@@ -12,6 +12,7 @@ from nsqueeze.io.sources.entsog import ENTSOGFlows
 from nsqueeze.io.sources.ets import ETSVerifiedEmissions
 from nsqueeze.io.sources.eurostat import (
     Comext,
+    ComextReporter,
     EurostatFertiliserIndex,
     EurostatGasTrade,
     EurostatHDD,
@@ -55,6 +56,7 @@ REGISTRY: dict[str, type[Source]] = {
         PinkSheetMonthly,
         EUAAuctions,
         Comext,
+        ComextReporter,
         EurostatPopulation,
         EurostatHDD,
         EurostatHDDNuts2,

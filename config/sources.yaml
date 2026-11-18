@@ -304,6 +304,18 @@ comext:
   verified: true   # parsed 2026-10-12
   phase: 1
 
+comext_reporter:
+  name: Eurostat Comext imports and exports of each EU-27 member state by partner (CN 2814 ammonia, HS6 310210 urea), monthly tonnes and euros
+  layer: shipping_and_trade
+  portal: https://ec.europa.eu/eurostat/comext/newxtweb/
+  frequency: monthly
+  auth: none
+  grade: A
+  recoverable: true   # Eurostat revises recent months, so vintages matter
+  verified: true   # reporter and flow parameters checked live 2026-11-18
+  phase: 0
+  note: one request per reporter. Comext writes Greece as GR. The EU-27 total stays in the comext source.
+
 ets_registry:
   name: EU ETS verified emissions per stationary installation, 2008 onward (Commission Union Registry file verified_emissions_<year>_en.xlsx)
   layer: nitrogen_cost_model
