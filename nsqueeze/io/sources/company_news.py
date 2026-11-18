@@ -34,7 +34,7 @@ COLUMNS = ["series_id", "observed_at", "value", "unit", "meta"]
 OCI_API = "https://oci-global.com/wp-json/wp/v2/posts"
 BASF_SITEMAP = "https://www.basf.com/dam/sitemaps/basf/www/global/en.xml"
 BASF_API = "https://www.basf.com/api/content/delivery/content/basf/www/"
-BASF_PATH = re.compile(r"global/en/media/news-releases/(\d{4})/(\d{2})/p-\d{2}-[0-9a-z-]+")
+BASF_PATH = re.compile(r"global/en/media/news-releases/(\d{4})/(\d{2})/p-\d{2}-[0-9A-Za-z-]+")
 
 
 def _row(company: str, rid: str, when: str, meta: dict) -> dict:
@@ -118,8 +118,9 @@ class BASFNews(Source):
                 continue
             p.raise_for_status()
             page = p.json()
-            when = page["@effectiveDate"]  # local day at 00:00, with its offset
-            if not start.isoformat() <= when[:10] <= end.isoformat():
+            when = page.get("@effectiveDate")  # local day at 00:00, with its offset
+            # No date: not a release page (an empty node, for example). Skip it.
+            if not when or not start.isoformat() <= when[:10] <= end.isoformat():
                 continue
             title = page["@title"]
             if PRODUCTION.search(title):

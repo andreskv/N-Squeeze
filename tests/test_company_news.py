@@ -61,9 +61,11 @@ def test_basf_fetch_skips_removed_pages_and_days_outside_the_window(tmp_path, mo
     def handler(request: httpx.Request) -> httpx.Response:
         path = request.url.path
         if path.endswith(".xml"):
-            names = [*pages, "p-22-9"]
+            names = [*pages, "p-22-9", "p-22-4-BASF-YPC"]
             return httpx.Response(200, text=" ".join(base + n for n in names))
         name = path.rsplit("/", 1)[-1]
+        if name == "p-22-4-BASF-YPC":
+            return httpx.Response(200, json={})  # an empty node
         if name not in pages:
             return httpx.Response(404)
         when, title = pages[name]
