@@ -72,7 +72,7 @@ def test_fetch_keeps_the_latest_edition_per_month(tmp_path, monkeypatch):
     monkeypatch.setenv("NSQ_DATA_DIR", str(tmp_path))
     monkeypatch.setattr(gus.time, "sleep", lambda s: None)
     page = (
-        "/obszary-tematyczne/x/produkcja-wazniejszych-wyrobow-przemyslowych-w-{}-2022-r-,2,{}.html"  # noqa: E501
+        "/obszary-tematyczne/x/produkcja-wazniejszych-wyrobow-przemyslowych-w-{}-2022-r-,2,{}.html"
     )
     links = f'<a href="{page.format("grudniu", 2)}"> <a href="{page.format("listopadzie", 1)}">'
     books = {"/1.xlsx": new_layout(2021, 2022, 5.0), "/2.xlsx": new_layout(2021, 2022, 7.0)}

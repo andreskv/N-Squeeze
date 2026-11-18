@@ -340,6 +340,18 @@ gus_production:
   phase: 0
   note: Thousand tonnes of 100 % NH3 per month, Poland. Each edition revises the months of the current and the previous year. One row per month from the latest edition read; meta names the edition.
 
+the_consumption:
+  name: Daily German gas consumption by customer type (SLP and metered RLM, H-gas and L-gas) from Trading Hub Europe, with the NCG and GASPOOL archives
+  layer: gas_flows
+  portal: https://www.tradinghub.eu/en-gb/Publications/Transparency/Aggregated-consumption-data
+  frequency: daily
+  auth: none
+  grade: B
+  recoverable: true
+  verified: true   # API and both archive files checked live 2026-11-19
+  phase: 0
+  note: THE from 1 Oct 2021 (kWh). NCG from Apr 2011 (kWh) and GASPOOL from Oct 2016 (MWh) to 30 Sep 2021. Metered (RLM) exits are the industrial demand, an aggregate. Units as published. meta holds the allocation status.
+
 comext:
   name: Eurostat Comext imports by origin (CN 2814, 3102 10)
   layer: shipping_and_trade

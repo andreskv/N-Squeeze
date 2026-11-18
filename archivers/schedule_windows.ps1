@@ -40,6 +40,7 @@ $jobs = @(
   @{ Source = "newsweb_filings"; At = "23:30"; Days = 10 },  # Oslo Børs filings (Yara)
   @{ Source = "oci_news"; At = "23:33"; Days = 10 },
   @{ Source = "basf_news"; At = "23:36"; Days = 10 },
+  @{ Source = "the_consumption"; At = "09:10"; Days = 40 },  # preliminary days turn final later
   @{ Source = "henry_hub"; At = "23:50" },
   @{ Source = "ttf_daily_candidate"; At = "23:55" },
   # Weekly (Monday): snapshots of revisable or slow-moving sources

@@ -37,6 +37,7 @@ from nsqueeze.io.sources.portwatch import PortWatch
 from nsqueeze.io.sources.prodcom import EurostatProdcom
 from nsqueeze.io.sources.sentinel2 import Sentinel2Plume, Sentinel2SWIR
 from nsqueeze.io.sources.sentinel5p import Sentinel5PNO2
+from nsqueeze.io.sources.the import THEConsumption
 from nsqueeze.io.sources.worldbank import PinkSheetMonthly
 from nsqueeze.io.sources.yahoo import YahooEquities, YahooTTF
 
@@ -88,6 +89,7 @@ REGISTRY: dict[str, type[Source]] = {
         OCINews,
         BASFNews,
         GUSProduction,
+        THEConsumption,
         _stub("wto_hormuz", 0),
         ETSVerifiedEmissions,
     )
