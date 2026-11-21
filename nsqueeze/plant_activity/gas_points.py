@@ -5,6 +5,10 @@ match class, the point keys of the ENTSOG series, a short evidence sentence and 
 grade. A row with match ``none`` carries no point keys: ENTSOG publishes no flow that
 contains the plant's offtake. ``load_points`` reads the table and checks it before any
 model uses it.
+
+Match ``balance`` is for a country that publishes no domestic exit. The plant then has one
+row for each border and LNG point of the national system, and the national use is the sum
+of the entries less the sum of the exits (``balance``). Linepack changes stay in it.
 """
 
 from __future__ import annotations
@@ -15,7 +19,7 @@ import pandas as pd
 
 from nsqueeze.config import config_dir
 
-MATCHES = ("direct", "industrial_aggregate", "distribution", "none")
+MATCHES = ("direct", "industrial_aggregate", "distribution", "balance", "none")
 GRADES = ("A", "B", "C")
 
 
@@ -61,3 +65,22 @@ def load_points(path: Path | str | None = None) -> pd.DataFrame:
     if problems:
         raise ValueError("entsog_plant_points.csv: " + "; ".join(problems))
     return df
+
+
+def balance(flows: pd.DataFrame, rows: pd.DataFrame) -> pd.Series:
+    """Daily national use: entries less exits over the points in ``rows``.
+
+    ``flows`` has the ENTSOG columns series_id, observed_at and value. A day counts only
+    when every point that exists on that day reports it. A point exists from its first
+    report on (a new interconnector, for example), so it adds nothing before that.
+    """
+    ids = "ENTSOG." + rows.operatorKey + "." + rows.pointKey + "." + rows.directionKey
+    sign = pd.Series(
+        rows.directionKey.map({"entry": 1.0, "exit": -1.0}).to_numpy(), index=ids.to_numpy()
+    )
+    f = flows[flows.series_id.isin(sign.index)]
+    wide = f.pivot_table(index="observed_at", columns="series_id", values="value", aggfunc="last")
+    exists = wide.notna().cummax()  # a point exists from its first report on
+    complete = (wide.notna() | ~exists).all(axis=1)
+    out = (wide.fillna(0.0) * sign[wide.columns]).sum(axis=1)
+    return out[complete].rename("balance")

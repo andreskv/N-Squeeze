@@ -4,7 +4,7 @@ import pandas as pd
 import pytest
 
 from nsqueeze.config import config_dir
-from nsqueeze.plant_activity.gas_points import MATCHES, load_points
+from nsqueeze.plant_activity.gas_points import MATCHES, balance, load_points
 
 COLUMNS = [
     "plant_id",
@@ -105,3 +105,29 @@ def test_rejects_none_with_point_and_missing_point(tmp_path):
 def test_rejects_duplicate_plant_point_direction(tmp_path):
     with pytest.raises(ValueError, match="duplicate"):
         load_points(write(tmp_path, [list(ROW), list(ROW)]))
+
+
+def test_balance_is_entries_less_exits_and_skips_incomplete_days():
+    rows = pd.DataFrame(
+        {
+            "operatorKey": ["LT-TSO-0001"] * 3,
+            "pointKey": ["ITP-1", "ITP-2", "ITP-3"],
+            "directionKey": ["entry", "exit", "entry"],
+        }
+    )
+    days = pd.to_datetime(["2022-01-01", "2022-01-02", "2022-01-03"])
+
+    def flow(key, direction, values):
+        sid = f"ENTSOG.LT-TSO-0001.{key}.{direction}"
+        return pd.DataFrame({"series_id": sid, "observed_at": days, "value": values})
+
+    flows = pd.concat(
+        [
+            flow("ITP-1", "entry", [100.0, 100.0, None]),  # missing on day 3
+            flow("ITP-2", "exit", [30.0, 30.0, 30.0]),
+            flow("ITP-3", "entry", [None, 5.0, 5.0]),  # a new point from day 2
+            flow("ITP-9", "entry", [999.0, 999.0, 999.0]),  # not in the rows
+        ]
+    ).dropna()
+    out = balance(flows, rows)
+    assert out.to_dict() == {days[0]: 70.0, days[1]: 75.0}
