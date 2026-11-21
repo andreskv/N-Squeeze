@@ -352,6 +352,18 @@ the_consumption:
   phase: 0
   note: THE from 1 Oct 2021 (kWh). NCG from Apr 2011 (kWh) and GASPOOL from Oct 2016 (MWh) to 30 Sep 2021. Metered (RLM) exits are the industrial demand, an aggregate. Units as published. meta holds the allocation status.
 
+enagas_industrial:
+  name: Daily gas use of large Spanish industrial consumers by sector of activity (Enagás IGIG)
+  layer: gas_flows
+  portal: https://www.enagas.es/en/gestion-tecnica-sistema/energy-data/publicaciones/demanda-gas/?category=enagas:demanda-de-gas/informe-demanda-industrial
+  frequency: daily
+  auth: none
+  grade: B
+  recoverable: false
+  verified: true   # both workbooks checked live 2026-11-19
+  phase: 0
+  note: GWh/d by sector (chemical and pharmaceutical holds Fertiberia). Daily rows for 2019-2021 and for the current year. Enagás replaces the current-year file each year, so only archiving keeps it. 2022-2025 exist only as monthly PDF reports.
+
 comext:
   name: Eurostat Comext imports by origin (CN 2814, 3102 10)
   layer: shipping_and_trade

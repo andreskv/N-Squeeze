@@ -8,6 +8,7 @@ from nsqueeze.io.sources.ecb import ECBFx, ECBFxNOK, ECBFxPLN
 from nsqueeze.io.sources.eex import EUAAuctions
 from nsqueeze.io.sources.eia import HenryHub
 from nsqueeze.io.sources.emodnet import EmodnetVesselDensity
+from nsqueeze.io.sources.enagas import EnagasIndustrial
 from nsqueeze.io.sources.entsoe import ENTSOEGasGeneration
 from nsqueeze.io.sources.entsog import ENTSOGFlows
 from nsqueeze.io.sources.ets import ETSVerifiedEmissions
@@ -90,6 +91,7 @@ REGISTRY: dict[str, type[Source]] = {
         BASFNews,
         GUSProduction,
         THEConsumption,
+        EnagasIndustrial,
         _stub("wto_hormuz", 0),
         ETSVerifiedEmissions,
     )
