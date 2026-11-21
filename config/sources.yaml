@@ -364,6 +364,18 @@ enagas_industrial:
   phase: 0
   note: GWh/d by sector (chemical and pharmaceutical holds Fertiberia). Daily rows for 2019-2021 and for the current year. Enagás replaces the current-year file each year, so only archiving keeps it. 2022-2025 exist only as monthly PDF reports.
 
+natran_industrial:
+  name: Daily gas use of French industrial customers on the transmission grid, by region (NaTran and Teréga, on ODRÉ)
+  layer: gas_flows
+  portal: https://odre.opendatasoft.com/explore/dataset/conso-journa-industriel-grtgazterega/
+  frequency: daily
+  auth: none
+  grade: B
+  recoverable: true
+  verified: true   # ODRÉ export checked live 2026-11-21
+  phase: 0
+  note: MWh (gross calorific value) per region and day, from 2018 (Teréga from July 2018). Licence Ouverte v2.0 (Etalab). Normandie holds Le Havre and Grand-Quevilly, Grand-Est holds Ottmarsheim, Ile-de-France holds Grandpuits.
+
 comext:
   name: Eurostat Comext imports by origin (CN 2814, 3102 10)
   layer: shipping_and_trade

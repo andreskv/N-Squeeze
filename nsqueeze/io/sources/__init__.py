@@ -33,6 +33,7 @@ from nsqueeze.io.sources.lseg_ports import LSEGPortCalls
 from nsqueeze.io.sources.lseg_series import LSEGSeries
 from nsqueeze.io.sources.newsweb import NewswebFilings
 from nsqueeze.io.sources.nightfire import NightfireVIIRS
+from nsqueeze.io.sources.odre import NatranIndustrial
 from nsqueeze.io.sources.openmeteo import OpenMeteoPlantWeather, OpenMeteoWeather
 from nsqueeze.io.sources.portwatch import PortWatch
 from nsqueeze.io.sources.prodcom import EurostatProdcom
@@ -92,6 +93,7 @@ REGISTRY: dict[str, type[Source]] = {
         GUSProduction,
         THEConsumption,
         EnagasIndustrial,
+        NatranIndustrial,
         _stub("wto_hormuz", 0),
         ETSVerifiedEmissions,
     )

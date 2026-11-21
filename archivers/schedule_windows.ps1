@@ -42,6 +42,7 @@ $jobs = @(
   @{ Source = "basf_news"; At = "23:36"; Days = 10 },
   @{ Source = "the_consumption"; At = "09:10"; Days = 40 },  # preliminary days turn final later
   @{ Source = "enagas_industrial"; At = "09:15"; Days = 40 },  # the current-year file is replaced each year
+  @{ Source = "natran_industrial"; At = "09:20"; Days = 60 },  # provisional days turn final later
   @{ Source = "henry_hub"; At = "23:50" },
   @{ Source = "ttf_daily_candidate"; At = "23:55" },
   # Weekly (Monday): snapshots of revisable or slow-moving sources
