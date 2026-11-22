@@ -77,6 +77,9 @@ amendments:
   - file: PREREGISTRATION-amendment-24.md
     sha256: e6d158cef445663fa243da3ac17c6018624ce81dbb899672b6d8bac5f99dfa05
     frozen_at: 2026-11-21
+  - file: PREREGISTRATION-amendment-25.md
+    sha256: 80f24b00dd935d9d9ad03d343eda0f0ecf541670c9bd46fd707712987a7ef464
+    frozen_at: 2026-11-22
 
 # Series that no analysis reads before its one confirmatory run. "*" seals the whole source.
 sealed_series:
